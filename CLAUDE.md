@@ -83,25 +83,43 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
     `debian/changelog`, and a release tarball has neither.
   - Pass `USE_DEBIAN_PATHS=` (empty). It stops mrbuild calling
     `dpkg-architecture` on Ubuntu, and it moves manpages into `manN/`.
+- **Python extensions.** mrbuild runs `dpkg-architecture`, found on Ubuntu
+  and on this Fedora host. If it answers, mrbuild assumes a Debian cross-build
+  and looks for Debian's sysconfig file. Pass `DEB_HOST_MULTIARCH=` and
+  `DEB_HOST_GNU_TYPE=` (empty), `PYTHON_VERSION_FOR_EXTENSIONS=3.14`, and
+  `_INCLUDENUMPY_FROM_PYTHON=1` (on Linux mrbuild asks `pkg-config numpy`,
+  which Homebrew lacks).
 - **Linux rpaths.** mrbuild's install runs `chrpath -d` when `chrpath` exists,
   which deletes Homebrew's RPATH too, and the libraries then load the host's
   `/lib64/libcholmod.so`. Pass `_STRIP_RPATH_FILES=true` on Linux.
   `brew linkage --test` catches this as "Unwanted system libraries".
-- **macOS rpaths.** mrbuild strips rpaths on macOS. Check with `brew linkage`
-  that the Python extension modules still find `libmrcal` and `libmrgingham`.
-- **OpenCV.** Homebrew's `opencv` is 5.0, and `opencv@4` exists.
-  - mrgingham's Makefile only tries `pkg-config opencv4` and `opencv`. Either
-    depend on `opencv@4` or patch in `opencv5`.
-  - Check that `cv::imread` still arrives via `highgui.hpp` under OpenCV 5.
-  - Upstream has never built mrgingham on macOS.
+- **macOS rpaths.** mrbuild strips its `@loader_path` rpaths on macOS, and
+  links Python extensions without `LDFLAGS`. The mrgingham formula adds rpaths
+  to `bin/mrgingham` and the extension with `MachO::Tools.add_rpath`, then
+  re-signs them. This is untested until CI runs on macOS; check `brew linkage`
+  there.
+- **OpenCV.** Homebrew's `opencv` is 5.0 (`opencv5.pc`, headers under
+  `include/opencv5`), and `opencv@4` exists. mrgingham builds with 5.0 after
+  one fix, on the `brew` branch of `~/Code/mrgingham` and inline in the
+  formula (`patch :DATA`): try `pkg-config opencv5`, and include
+  `opencv2/features2d.hpp`, since 5.0 dropped
+  `opencv2/features2d/features2d.hpp`. `cv::imread` still arrives via
+  `highgui.hpp`.
+  - `opencv5.pc` lists every module. Link with `-Wl,--as-needed` (Linux) or
+    `-Wl,-dead_strip_dylibs` (macOS) to keep the five that mrgingham uses.
 - **stb** isn't in Homebrew. It's header-only, so use a pinned `resource`.
   mrcal's `USE_LOCAL_STB_IMPLEMENTATION` defaults on for macOS; set it on Linux
   too.
 - **Python packages** not in Homebrew are bundled as `resource`s, per
   Homebrew's Python rules.
   - Not in Homebrew: numpysane and gnuplotlib (mrgingham and mrcal), shapely
-    (mrcal).
-  - In Homebrew: `numpy`, `scipy` and `gnuplot`.
+    (mrcal). mrgingham puts them in a `libexec` virtualenv with system site
+    packages, which its Python script's shebang points at.
+  - In Homebrew: `numpy`, `scipy`, `gnuplot` and `python-packaging`
+    (numpysane needs `packaging` on Python 3.12+, which lacks distutils).
+    Building numpysane and gnuplotlib needs `python-setuptools`.
+  - Python extension modules go into python@3.14's site-packages, so
+    `python3.14 -c "import mrgingham"` works.
   - mrcal's interactive viewers need pyfltk and GL_image_display. Leave them
     out at first.
 - **vnlog** needs `mawk`, and `moreutils` for `vnl-ts`.
@@ -120,7 +138,9 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
     `tail`, which are BSD versions on macOS. The test suite, which runs in the
     build, detects non-GNU `join` and `uniq` and then runs fewer tests.
 - **mrgingham's zsh patch** (find `zsh` on the PATH) only matters for its test
-  suite, and Linuxbrew hosts may lack `/bin/zsh`.
+  suite, and Linuxbrew hosts may lack `/bin/zsh`. The formula doesn't need it:
+  the build runs only `test/test--mrgingham-find-board`, with the venv's
+  Python.
 - **mrcal's test patch** skips `test-optimizer-callback.py`, which fails on
   upstream master. It's only needed if the build runs the test suite.
 - **Alternative:** mrcal's pip wheels already cover Apple Silicon Macs (with
