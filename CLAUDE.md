@@ -106,11 +106,19 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
     out at first.
 - **vnlog** needs `mawk`, and `moreutils` for `vnl-ts`.
   - Its CPAN runtime modules become `resource`s in `libexec`, with `PERL5LIB`
-    wrappers: List::MoreUtils, Text::Table and String::ShellQuote. Its tests
-    also need IPC::Run and Text::Diff.
+    wrappers: List::MoreUtils (which needs List::MoreUtils::XS and
+    Exporter::Tiny) and Text::Table (which needs Text::Aligner). v1.43 doesn't
+    use String::ShellQuote. Its tests also need IPC::Run and Text::Diff (which
+    needs Algorithm::Diff), installed in the build tree only.
+  - The tools must stay together in `libexec/bin`: `vnl-join` runs
+    `perl $RealBin/vnl-sort`, which fails on a shell wrapper.
+  - `vnl-gen-header` emits `#include <vnlog/vnlog.h>`, so the headers go in
+    `include/vnlog/`.
+  - Its GNUmakefile uses `define VAR =`, which needs GNU make 3.82+. Build
+    with `gmake` on macOS.
   - `vnl-sort`, `vnl-join` and `vnl-tail` wrap the system `sort`, `join` and
-    `tail`, which are BSD versions on macOS. Upstream says it's tested on
-    macOS, but run its test suite there to confirm.
+    `tail`, which are BSD versions on macOS. The test suite, which runs in the
+    build, detects non-GNU `join` and `uniq` and then runs fewer tests.
 - **mrgingham's zsh patch** (find `zsh` on the PATH) only matters for its test
   suite, and Linuxbrew hosts may lack `/bin/zsh`.
 - **mrcal's test patch** skips `test-optimizer-callback.py`, which fails on
