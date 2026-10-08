@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A Homebrew tap (`harryweppner/calibration`) for Dima Kogan's camera-calibration
 tools. Targets: macOS on Apple Silicon and Homebrew on Linux (x86_64, arm64).
 Homebrew has no Intel-macOS OpenCV bottles, so Intel Macs are out of scope.
-No formulae exist yet; README.md is the user-facing doc.
+README.md is the user-facing doc.
 
 ## Plan
 
@@ -79,6 +79,14 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
     dependency.
   - Install libdogleg's header as `include/dogleg.h` (`INSTALL_ROOT_INCLUDE`),
     since mrcal does `#include <dogleg.h>`.
+  - Pass `VERSION=#{version}`: mrbuild reads the version from git or
+    `debian/changelog`, and a release tarball has neither.
+  - Pass `USE_DEBIAN_PATHS=` (empty). It stops mrbuild calling
+    `dpkg-architecture` on Ubuntu, and it moves manpages into `manN/`.
+- **Linux rpaths.** mrbuild's install runs `chrpath -d` when `chrpath` exists,
+  which deletes Homebrew's RPATH too, and the libraries then load the host's
+  `/lib64/libcholmod.so`. Pass `_STRIP_RPATH_FILES=true` on Linux.
+  `brew linkage --test` catches this as "Unwanted system libraries".
 - **macOS rpaths.** mrbuild strips rpaths on macOS. Check with `brew linkage`
   that the Python extension modules still find `libmrcal` and `libmrgingham`.
 - **OpenCV.** Homebrew's `opencv` is 5.0, and `opencv@4` exists.
@@ -115,6 +123,10 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
 
 Linuxbrew is installed at `/home/linuxbrew/.linuxbrew`.
 
+`brew tap NAME PATH` clones the checkout, so uncommitted edits are invisible
+to `brew`. The tap directory here is instead a symlink to this checkout:
+`$(brew --repository)/Library/Taps/harryweppner/homebrew-calibration`.
+
 ```sh
 brew tap harryweppner/calibration ~/Code/homebrew-calibration   # once
 brew install --build-from-source harryweppner/calibration/NAME
@@ -132,5 +144,8 @@ brew linkage harryweppner/calibration/NAME
 ## Conventions
 
 - Commit messages carry no attribution lines.
+- Upstream fixes go on a branch named `brew` in the checkouts under `~/Code`:
+  `mrbuild`, `libdogleg`, `vnlog`, `mrgingham` and `mrcal`. The formula
+  carries them as patches until upstream merges them.
 - There is no GitHub remote yet. Creating `HarryWeppner/homebrew-calibration`
   is a separate step that needs the owner's go-ahead.
