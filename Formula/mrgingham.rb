@@ -47,7 +47,7 @@ class Mrgingham < Formula
     # gnuplotlib. The venv sees numpy, vnlog and packaging in Homebrew's
     # site-packages.
     venv = virtualenv_create(libexec, python3)
-    venv.pip_install resources.reject { |r| r.name == "mrbuild" }
+    venv.pip_install resources.reject { |r| r.name == "mrbuild" }, build_isolation: false
     rewrite_shebang python_shebang_rewrite_info(libexec/"bin/python"), "mrgingham-observe-pixel-uncertainty"
 
     (buildpath/"mrbuild").install resource("mrbuild")

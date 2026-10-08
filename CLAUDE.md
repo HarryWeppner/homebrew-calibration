@@ -109,15 +109,27 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
     `-Wl,-dead_strip_dylibs` (macOS) to keep the five that mrgingham uses.
 - **stb** isn't in Homebrew. It's header-only, so use a pinned `resource`.
   mrcal's `USE_LOCAL_STB_IMPLEMENTATION` defaults on for macOS; set it on Linux
-  too.
+  too. mrcal only needs `stb_image.h`, found as `<stb/stb_image.h>`.
 - **Python packages** not in Homebrew are bundled as `resource`s, per
   Homebrew's Python rules.
   - Not in Homebrew: numpysane and gnuplotlib (mrgingham and mrcal), shapely
     (mrcal). mrgingham puts them in a `libexec` virtualenv with system site
     packages, which its Python script's shebang points at.
-  - In Homebrew: `numpy`, `scipy`, `gnuplot` and `python-packaging`
-    (numpysane needs `packaging` on Python 3.12+, which lacks distutils).
-    Building numpysane and gnuplotlib needs `python-setuptools`.
+  - In Homebrew: `numpy`, `scipy`, `gnuplot`, `python-packaging` (numpysane
+    needs `packaging` on Python 3.12+, which lacks distutils) and `cv2` (from
+    `opencv`). Building numpysane, gnuplotlib and pyyaml needs
+    `python-setuptools`.
+  - Always pass `build_isolation: false` to `pip_install`. With isolation, pip
+    fetches build dependencies from PyPI and builds them from source; for
+    shapely that means compiling numpy.
+  - shapely 2.2 builds with meson-python, which Homebrew lacks. meson-python
+    and pyproject-metadata are pure Python, so mrcal stages their sources as
+    build-only resources on the `PYTHONPATH`, alongside Homebrew's Cython
+    (in `cython`'s libexec). It also needs `meson`, `ninja`, `pkgconf` and
+    `geos`.
+  - mrcal's own package goes in python@3.14's site-packages, and its bundled
+    packages in a `libexec` venv. A `.pth` file each way lets
+    `python3.14 -c "import mrcal"` and the tools both work.
   - Python extension modules go into python@3.14's site-packages, so
     `python3.14 -c "import mrgingham"` works.
   - mrcal's interactive viewers need pyfltk and GL_image_display. Leave them
@@ -141,8 +153,20 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
   suite, and Linuxbrew hosts may lack `/bin/zsh`. The formula doesn't need it:
   the build runs only `test/test--mrgingham-find-board`, with the venv's
   Python.
-- **mrcal's test patch** skips `test-optimizer-callback.py`, which fails on
-  upstream master. It's only needed if the build runs the test suite.
+- **mrcal's tests.** `make test-nosampling` takes about a minute, so the
+  build runs it. It needs zsh (a build dependency on Linux).
+  `test-optimizer-callback.py` fails on upstream master; the formula drops it
+  from `test.sh` with `inreplace`, as calibration-containers' patch does.
+- **mrcal's upstream fixes**, on the `brew` branch of `~/Code/mrcal` and
+  inline in the formula (`patch :DATA`, the diff from the pin to `brew`):
+  - Install `_attribute.h`: `mrcal.h` and `basic-geometry.h` include it, and
+    `DIST_INCLUDE` missed it.
+  - `minimath_generate.pl` used List::MoreUtils only for `pairwise`; it now
+    uses `map`, so the build needs no CPAN module. The generated header is
+    byte-identical.
+- **mrcal runs `mrgingham` and `vnl-filter`** as commands (corner finding in
+  `calibration.py`, `mrcal-is-within-valid-intrinsics-region`), so it depends
+  on both formulae.
 - **Alternative:** mrcal's pip wheels already cover Apple Silicon Macs (with
   vnlog and gnuplot), but have no mrgingham. A tap with just mrgingham and
   vnlog, used alongside `pip install mrcal`, is a cheaper fallback.
