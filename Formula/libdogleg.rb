@@ -5,6 +5,12 @@ class Libdogleg < Formula
   sha256 "d97ef0c149463f84e9bd40c8852da444605a38bac432b5b2774de3dd15180bab"
   license "LGPL-3.0-or-later"
 
+  bottle do
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/libdogleg-0.18"
+    sha256 cellar: :any, arm64_tahoe:  "9e6c9e63297bba10be7a296f25d81009821fdbcefc19db885158732f3355511f"
+    sha256 cellar: :any, x86_64_linux: "bd893125f1dfc86590b439e4d03a461c11c1c7de9a9b6a5bd330f92abeaeae27"
+  end
+
   depends_on "openblas"
   depends_on "suite-sparse"
 
