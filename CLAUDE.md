@@ -214,5 +214,6 @@ brew linkage harryweppner/calibration/NAME
 - Upstream fixes go on a branch named `brew` in the checkouts under `~/Code`:
   `mrbuild`, `libdogleg`, `vnlog`, `mrgingham` and `mrcal`. The formula
   carries them as patches until upstream merges them.
-- There is no GitHub remote yet. Creating `HarryWeppner/homebrew-calibration`
-  is a separate step that needs the owner's go-ahead.
+- The GitHub remote is `HarryWeppner/homebrew-calibration`, public. It's a
+  temporary demonstration until upstream hosts the tap; then leave a
+  `tap_migrations.json` pointing at the new tap before archiving or deleting.
