@@ -16,6 +16,12 @@ class Mrgingham < Formula
     regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
+  bottle do
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrgingham-1.28-5-g8775c09"
+    sha256 cellar: :any, arm64_tahoe:  "3539d90985d91038f9ee9a0036334201e8367310bd6d66c5f48e431290b35e47"
+    sha256 cellar: :any, x86_64_linux: "78f4633b55ee426c2f5d3c0e2d05daee498bf356ce2377a0d0afba9b43643371"
+  end
+
   depends_on "pkgconf" => :build
   depends_on "python-setuptools" => :build
   depends_on "gnuplot"
