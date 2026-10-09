@@ -153,6 +153,12 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
   suite, and Linuxbrew hosts may lack `/bin/zsh`. The formula doesn't need it:
   the build runs only `test/test--mrgingham-find-board`, with the venv's
   Python.
+- **livecheck.** With no `livecheck` block, livecheck matches every git tag.
+  mrcal's `2023-07-26--triangulated-features-merged` tag then sorts as newer
+  than 2.5.2, so autobump would open bogus PRs. mrgingham and mrcal restrict
+  livecheck to `vX.Y[.Z]` tags. Their commit-pinned versions read as newer
+  than upstream, so autobump leaves them alone until a new release; it then
+  probably can't rewrite a commit URL, so switch those to tag URLs by hand.
 - **mrcal's tests.** `make test-nosampling` takes about a minute, so the
   build runs it. It needs zsh (a build dependency on Linux).
   `test-optimizer-callback.py` fails on upstream master; the formula drops it
@@ -181,8 +187,10 @@ to `brew`. The tap directory here is instead a symlink to this checkout:
 
 Homebrew 7 refuses to load formulae from untrusted taps. Naming a formula on
 the command line trusts it, but its dependencies from this tap stay untrusted,
-so run `brew trust harryweppner/calibration` once (it's recorded in
-`~/.homebrew/trust.json`). Done on this host.
+so run `brew trust harryweppner/calibration` (it's recorded in
+`~/.homebrew/trust.json`). Trust is keyed by the tap's git remote, or by the
+tap name when the tap is a symlink with no remote, so swapping between a clone
+and the symlink needs trusting again. Both are trusted on this host.
 
 ```sh
 brew tap harryweppner/calibration ~/Code/homebrew-calibration   # once
@@ -193,7 +201,9 @@ brew linkage harryweppner/calibration/NAME
 ```
 
 - Don't run `brew tap-new` or other developer commands casually: they switch
-  on the global developer mode (`brew developer off` reverts it).
+  on the global developer mode (`brew developer off` reverts it). `brew audit`,
+  `brew style` and `brew livecheck` count, so turn it off after a session of
+  formula work.
 - macOS can't be tested locally. Use GitHub's macOS runners via
   `.github/workflows/tests.yml` (the `brew tap-new` template), once the repo
   is on GitHub.

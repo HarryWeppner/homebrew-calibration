@@ -9,6 +9,13 @@ class Mrgingham < Formula
   sha256 "520deafc6d5588c190b4997000729e5339208976512ecb59936ac19c739965ec"
   license all_of: ["LGPL-2.1-or-later", "MIT"]
 
+  # Only release tags: the repo also has pre-release, wheel/, debian/,
+  # mrbuild_ and dated tags, and the dated ones sort as newer.
+  livecheck do
+    url "https://github.com/dkogan/mrgingham.git"
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
   depends_on "pkgconf" => :build
   depends_on "python-setuptools" => :build
   depends_on "gnuplot"

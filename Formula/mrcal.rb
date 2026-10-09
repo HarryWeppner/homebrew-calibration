@@ -9,6 +9,13 @@ class Mrcal < Formula
   sha256 "6afd329d1f07624d3ee101175043f0ff4cfc522b1226284ed3ce4c08d107f368"
   license "Apache-2.0"
 
+  # Only release tags: the repo also has pre-release, wheel/, debian/,
+  # mrbuild_ and dated tags, and the dated ones sort as newer.
+  livecheck do
+    url "https://github.com/dkogan/mrcal.git"
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
   depends_on "cython" => :build
   depends_on "meson" => :build
   depends_on "ninja" => :build
