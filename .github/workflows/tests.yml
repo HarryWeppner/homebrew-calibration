@@ -16,6 +16,8 @@ defaults:
 jobs:
   test-bot:
     strategy:
+      # Let each platform finish, so one failure doesn't hide the other's
+      fail-fast: false
       matrix:
         os: [ macos-26 ]
         include:

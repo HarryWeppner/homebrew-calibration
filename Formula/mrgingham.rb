@@ -27,9 +27,19 @@ class Mrgingham < Formula
 
   uses_from_macos "perl" => :build
 
+  on_macos do
+    depends_on "gnu-getopt"
+  end
+
   resource "mrbuild" do
     url "https://github.com/dkogan/mrbuild/archive/refs/tags/v1.21.tar.gz"
     sha256 "a5667b6bc2adbce8dbf1072364a54cde973e155ed74408a3f1c87b426c31521e"
+
+    # macOS: name libraries libxxx.ABI.dylib, not libxxx.dylib.ABI. Not sent
+    # upstream yet.
+    patch do
+      file "Patches/mrbuild/macos-dylib-names.patch"
+    end
   end
 
   resource "numpysane" do
@@ -58,6 +68,11 @@ class Mrgingham < Formula
     rewrite_shebang python_shebang_rewrite_info(libexec/"bin/python"), "mrgingham-observe-pixel-uncertainty"
 
     (buildpath/"mrbuild").install resource("mrbuild")
+
+    # mrgingham-rotate-corners parses its options with GNU getopt; macOS's has no long options
+    if OS.mac?
+      inreplace "mrgingham-rotate-corners", "$(getopt ", "$(#{formula_opt_bin("gnu-getopt")}/getopt "
+    end
 
     # DEB_HOST_*= stops mrbuild treating a host with dpkg-architecture (such
     # as Ubuntu) as a Debian cross-build, which looks for Debian's Python.

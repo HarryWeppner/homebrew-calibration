@@ -24,6 +24,12 @@ class Vnlog < Formula
   resource "mrbuild" do
     url "https://github.com/dkogan/mrbuild/archive/refs/tags/v1.21.tar.gz"
     sha256 "a5667b6bc2adbce8dbf1072364a54cde973e155ed74408a3f1c87b426c31521e"
+
+    # macOS: name libraries libxxx.ABI.dylib, not libxxx.dylib.ABI. Not sent
+    # upstream yet.
+    patch do
+      file "Patches/mrbuild/macos-dylib-names.patch"
+    end
   end
 
   resource "Exporter::Tiny" do

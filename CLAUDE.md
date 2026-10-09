@@ -93,6 +93,17 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
   which deletes Homebrew's RPATH too, and the libraries then load the host's
   `/lib64/libcholmod.so`. Pass `_STRIP_RPATH_FILES=true` on Linux.
   `brew linkage --test` catches this as "Unwanted system libraries".
+- **macOS library names.** mrbuild names macOS libraries Linux-style
+  (`libxxx.dylib.ABI`), and `brew audit` rejects them as non-libraries. The fix
+  is on the `brew` branch of `~/Code/mrbuild`, and the tap carries it as
+  `Patches/mrbuild/macos-dylib-names.patch`, applied to each formula's mrbuild
+  resource (`patch do file ... end`). It builds `libxxx.ABI.TAIL.dylib` with
+  install name `libxxx.ABI.dylib`; `libxxx.dylib.ABI` stays in the build tree
+  as a symlink for project Makefiles (mrcal's refers to it), uninstalled.
+- **GNU getopt.** `mrgingham-rotate-corners` and `mrcal-rotate-corners` parse
+  options with GNU `getopt -l`. macOS's BSD getopt has no long options, so
+  both formulae depend on `gnu-getopt` on macOS and point the scripts at it.
+  Without it, mrgingham's manpage generation fails.
 - **macOS rpaths.** mrbuild strips its `@loader_path` rpaths on macOS, and
   links Python extensions without `LDFLAGS`. The mrgingham formula adds rpaths
   to `bin/mrgingham` and the extension with `MachO::Tools.add_rpath`, then

@@ -1,0 +1,85 @@
+From 92aada370d8cf261cb4d6f8b594a093f54c9b80a Mon Sep 17 00:00:00 2001
+From: Harry Weppner <harry@weppner.dev>
+Date: Thu, 8 Oct 2026 19:30:20 -0700
+Subject: [PATCH] macOS: put the library version before .dylib
+
+macOS libraries are named libxxx.ABI.dylib, not libxxx.dylib.ABI, and
+Homebrew's audit rejects the Linux-style names as non-libraries. Build and
+install libxxx.ABI.TAIL.dylib, with libxxx.ABI.dylib as its install name.
+libxxx.dylib.ABI stays in the build tree as a symlink, for project
+Makefiles that refer to it, but isn't installed. Linux is unchanged.
+---
+ Makefile.common.footer |  4 ++--
+ Makefile.common.header | 27 +++++++++++++++++++++------
+ 2 files changed, 23 insertions(+), 8 deletions(-)
+
+diff --git a/Makefile.common.footer b/Makefile.common.footer
+index 62bbfe8..f4e2763 100644
+--- a/Makefile.common.footer
++++ b/Makefile.common.footer
+@@ -90,8 +90,8 @@ $(eval $(call MRBUILD_ADD_LIBRARY, $(LIB_NAME),$(LIB_SOURCES)))
+ 
+ LIB_OBJECTS := $(addsuffix .o,$(basename $(LIB_SOURCES)))
+ LIB_TARGET_SO_BARE := $(LIB_NAME).$(SO)
+-LIB_TARGET_SO_ABI  := $(LIB_TARGET_SO_BARE).$(ABI_VERSION)
+-LIB_TARGET_SO_FULL := $(LIB_TARGET_SO_ABI).$(TAIL_VERSION)
++LIB_TARGET_SO_ABI  := $(call _LIB_ABI,$(LIB_NAME))
++LIB_TARGET_SO_FULL := $(call _LIB_FULL,$(LIB_NAME))
+ LIB_TARGET_SO_ALL  := $(LIB_TARGET_SO_BARE) $(LIB_TARGET_SO_ABI) $(LIB_TARGET_SO_FULL)
+ endif
+ 
+diff --git a/Makefile.common.header b/Makefile.common.header
+index 0bfc7e0..4531e15 100644
+--- a/Makefile.common.header
++++ b/Makefile.common.header
+@@ -68,6 +68,12 @@ endif
+ _RPATH_OPTION = -Wl,-rpath,$(call _RPATH,$@)
+ 
+ _SONAME = $(notdir $(patsubst %.$(TAIL_VERSION),%,$@))
++
++# Versioned library names. On Linux these are libxxx.so.ABI and
++# libxxx.so.ABI.TAIL. On macOS the version goes before the suffix, as the macOS
++# tools expect: libxxx.ABI.dylib and libxxx.ABI.TAIL.dylib
++_LIB_ABI  = $(strip $1)$(if $(COND_DARWIN),.$(ABI_VERSION).$(SO),.$(SO).$(ABI_VERSION))
++_LIB_FULL = $(strip $1)$(if $(COND_DARWIN),.$(ABI_VERSION).$(TAIL_VERSION).$(SO),.$(SO).$(ABI_VERSION).$(TAIL_VERSION))
+ ifeq ($(COND_DARWIN),)
+   _SONAME_OPTION = -Wl,--default-symver -Wl,-soname,$(_SONAME)
+ else
+@@ -88,19 +94,28 @@ _LDFLAGS_LIB = -shared -fPIC $(_RPATH_OPTION) $(_SONAME_OPTION)
+ define MRBUILD_ADD_LIBRARY
+ 
+ _LIB_SOURCES_ALL += $2
+-_LIB_TARGETS_ALL += $1.$$(SO) $1.$$(SO).$$(ABI_VERSION) $1.$$(SO).$$(ABI_VERSION).$$(TAIL_VERSION)
++_LIB_TARGETS_ALL += $1.$$(SO) $$(call _LIB_ABI,$1) $$(call _LIB_FULL,$1)
++
++all: $1.$$(SO) $$(call _LIB_ABI,$1) $$(call _LIB_FULL,$1)
+ 
+-all: $1.$$(SO) $1.$$(SO).$$(ABI_VERSION) $1.$$(SO).$$(ABI_VERSION).$$(TAIL_VERSION)
++$$(call _LIB_FULL,$1): LDFLAGS += $$(_LDFLAGS_LIB)
++$$(call _LIB_FULL,$1): _SONAME := $$(notdir $$(call _LIB_ABI,$1))
+ 
+-$1.$$(SO).$$(ABI_VERSION).$$(TAIL_VERSION): LDFLAGS += $$(_LDFLAGS_LIB)
++$1.$$(SO) $$(call _LIB_ABI,$1): $$(call _LIB_FULL,$1)
++	ln -fs $$(notdir $$(call _LIB_FULL,$1)) $$@
+ 
+-$1.$$(SO) $1.$$(SO).$$(ABI_VERSION): $1.$$(SO).$$(ABI_VERSION).$$(TAIL_VERSION)
+-	ln -fs $$(notdir $1.$$(SO).$$(ABI_VERSION).$$(TAIL_VERSION)) $$@
++# On macOS, project Makefiles may still refer to the Linux-style
++# libxxx.dylib.ABI. It exists in the build tree, but isn't installed
++ifneq ($$(COND_DARWIN),)
++all: $1.$$(SO).$$(ABI_VERSION)
++$1.$$(SO).$$(ABI_VERSION): $$(call _LIB_FULL,$1)
++	ln -fs $$(notdir $$(call _LIB_FULL,$1)) $$@
++endif
+ 
+ # Here instead of specifying $^, I do just the %.o parts and then the
+ # others. This is required to make the linker happy to see the dependent
+ # objects first and the dependency objects last. Same as for BIN_TARGETS
+-$1.$$(SO).$$(ABI_VERSION).$$(TAIL_VERSION): $$(addsuffix .o,$$(basename $2))
++$$(call _LIB_FULL,$1): $$(addsuffix .o,$$(basename $2))
+ 	$$(CC_LINKER) $$(LDFLAGS) $$(filter %.o, $$^) $$(filter-out %.o, $$^) $$(LDLIBS) -o $$@
+ 
+ endef
+-- 
+2.56.0
+

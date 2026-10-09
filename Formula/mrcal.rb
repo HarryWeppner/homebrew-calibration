@@ -40,6 +40,10 @@ class Mrcal < Formula
 
   uses_from_macos "perl" => :build
 
+  on_macos do
+    depends_on "gnu-getopt"
+  end
+
   on_linux do
     depends_on "zsh" => :build # test.sh
   end
@@ -47,6 +51,12 @@ class Mrcal < Formula
   resource "mrbuild" do
     url "https://github.com/dkogan/mrbuild/archive/refs/tags/v1.21.tar.gz"
     sha256 "a5667b6bc2adbce8dbf1072364a54cde973e155ed74408a3f1c87b426c31521e"
+
+    # macOS: name libraries libxxx.ABI.dylib, not libxxx.dylib.ABI. Not sent
+    # upstream yet.
+    patch do
+      file "Patches/mrbuild/macos-dylib-names.patch"
+    end
   end
 
   resource "stb" do
@@ -119,6 +129,11 @@ class Mrcal < Formula
     (libexec/site_packages/"homebrew-mrcal.pth").write "#{opt_prefix/site_packages}\n"
 
     (buildpath/"mrbuild").install resource("mrbuild")
+
+    # mrcal-rotate-corners parses its options with GNU getopt; macOS's has no long options
+    if OS.mac?
+      inreplace "mrcal-rotate-corners", "$(getopt ", "$(#{formula_opt_bin("gnu-getopt")}/getopt "
+    end
     (buildpath/"stb/stb").install resource("stb").files("stb_image.h")
     ENV.append "CFLAGS", "-I#{buildpath}/stb"
 
