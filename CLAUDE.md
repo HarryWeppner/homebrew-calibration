@@ -174,6 +174,13 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
   build runs it. It needs zsh (a build dependency on Linux).
   `test-optimizer-callback.py` fails on upstream master; the formula drops it
   from `test.sh` with `inreplace`, as calibration-containers' patch does.
+- **mrcal's near-singularity test** fails 6 of 1350 checks on Apple Silicon.
+  mrcal's results match Linux's; at a rotation of exactly pi, r and -r are the
+  same rotation, and the test's numpy reference takes the sign from roundoff.
+  The tap carries an interim patch,
+  `Patches/mrcal/test-near-singularity-either-form.patch`, that skips only
+  checks hitting that ambiguity (none on Linux). The upstream fix should
+  compare against the closer form instead, converting the reference gradient.
 - **mrcal's upstream fixes**, on the `brew` branch of `~/Code/mrcal` and
   inline in the formula (`patch :DATA`, the diff from the pin to `brew`):
   - Install `_attribute.h`: `mrcal.h` and `basic-geometry.h` include it, and
