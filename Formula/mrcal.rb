@@ -100,6 +100,13 @@ class Mrcal < Formula
   # Not sent upstream yet.
   patch :DATA
 
+  # At a rotation of exactly pi, test-poseutils-near-singularity.py's numpy
+  # reference picks the sign of the result from roundoff, which differs on
+  # Apple Silicon. Skip only those checks; see the patch for details.
+  patch do
+    file "Patches/mrcal/test-near-singularity-either-form.patch"
+  end
+
   def python3
     "python3.14"
   end
