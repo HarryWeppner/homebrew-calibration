@@ -9,6 +9,12 @@ class Vnlog < Formula
   sha256 "89949d1fa239fb53d31efe0dd36c0c91bc1485c3e3270f66eaed07d0e5f5eb85"
   license "LGPL-2.1-or-later"
 
+  bottle do
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/vnlog-1.43"
+    sha256 cellar: :any, arm64_tahoe:  "98d248a4f8233b9659180a6594a70e38220013a31547f935afa490632e879e00"
+    sha256 cellar: :any, x86_64_linux: "98101ee41faa11fae35b810bc0354920c1018abb8f671bd6d9ea2d7d32339f94"
+  end
+
   depends_on "mawk"
   depends_on "moreutils"
   depends_on "numpy"
