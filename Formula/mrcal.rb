@@ -16,6 +16,12 @@ class Mrcal < Formula
     regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
+  bottle do
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrcal-2.5.2-263-g119d5b06"
+    sha256 cellar: :any, arm64_tahoe:  "00c740aa873e631bd1cdace558d30431396ef0ea0391b183db03b83788324888"
+    sha256 cellar: :any, x86_64_linux: "e58c8bb0c5dcef1a9e1c4bc21d5793e43f31e6fa004cb9435b55956c94bc17ef"
+  end
+
   depends_on "cython" => :build
   depends_on "meson" => :build
   depends_on "ninja" => :build
