@@ -17,10 +17,15 @@ upstream, and problems with the formulae here.
 
 ```sh
 brew tap harryweppner/calibration
+brew trust harryweppner/calibration
 brew install mrgingham mrcal vnlog
 ```
 
-Or in a `Brewfile`:
+Homebrew only loads formulae from taps you trust. It trusts the formulae you
+name on the command line, but not their dependencies from the same tap, so
+without `brew trust` installing `mrcal` fails on `vnlog`.
+
+Or in a `Brewfile`, after running `brew trust` once:
 
 ```ruby
 tap "harryweppner/calibration"

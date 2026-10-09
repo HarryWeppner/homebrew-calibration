@@ -179,6 +179,11 @@ Linuxbrew is installed at `/home/linuxbrew/.linuxbrew`.
 to `brew`. The tap directory here is instead a symlink to this checkout:
 `$(brew --repository)/Library/Taps/harryweppner/homebrew-calibration`.
 
+Homebrew 7 refuses to load formulae from untrusted taps. Naming a formula on
+the command line trusts it, but its dependencies from this tap stay untrusted,
+so run `brew trust harryweppner/calibration` once (it's recorded in
+`~/.homebrew/trust.json`). Done on this host.
+
 ```sh
 brew tap harryweppner/calibration ~/Code/homebrew-calibration   # once
 brew install --build-from-source harryweppner/calibration/NAME
