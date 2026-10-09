@@ -23,6 +23,9 @@ A formula is done when:
 - `brew linkage` is clean;
 - `brew test-bot` passes in CI on macOS and Linux.
 
+All four are done: PR #1 passed test-bot on macOS 26 (Apple Silicon) and
+Ubuntu, and its bottles were published with `brew pr-pull` on 2026-10-09.
+
 Keep the `test do` blocks quick. Upstream's full test suites belong in the
 build, if anywhere: mrcal's `test-nosampling` is far too slow for `test do`.
 
@@ -107,8 +110,8 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
 - **macOS rpaths.** mrbuild strips its `@loader_path` rpaths on macOS, and
   links Python extensions without `LDFLAGS`. The mrgingham formula adds rpaths
   to `bin/mrgingham` and the extension with `MachO::Tools.add_rpath`, then
-  re-signs them. This is untested until CI runs on macOS; check `brew linkage`
-  there.
+  re-signs them, and likewise mrcal's extensions. `brew linkage` passes on
+  macOS in CI.
 - **OpenCV.** Homebrew's `opencv` is 5.0 (`opencv5.pc`, headers under
   `include/opencv5`), and `opencv@4` exists. mrgingham builds with 5.0 after
   one fix, on the `brew` branch of `~/Code/mrgingham` and inline in the
@@ -222,9 +225,12 @@ brew linkage harryweppner/calibration/NAME
   on the global developer mode (`brew developer off` reverts it). `brew audit`,
   `brew style` and `brew livecheck` count, so turn it off after a session of
   formula work.
-- macOS can't be tested locally. Use GitHub's macOS runners via
-  `.github/workflows/tests.yml` (the `brew tap-new` template), once the repo
-  is on GitHub.
+- macOS can't be tested locally. Open a PR: `.github/workflows/tests.yml`
+  runs `brew test-bot` on GitHub's macOS and Linux runners (about 30 and 55
+  minutes for all four formulae). test-bot only builds formulae that a PR
+  changes. To publish a green PR's bottles, run the `publish.yml` workflow
+  with its number; `brew pr-pull` pushes to `main` and closes the PR, then
+  `git pull` here.
 
 ## Conventions
 

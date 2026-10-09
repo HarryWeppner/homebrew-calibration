@@ -8,7 +8,9 @@ Kogan, for macOS (Apple Silicon) and Homebrew on Linux:
 - [mrcal](https://github.com/dkogan/mrcal): the calibration solver and tools
 - [libdogleg](https://github.com/dkogan/libdogleg): the optimizer mrcal uses
 
-No formulae are published yet. The versions and patches track the pins in
+Bottles are published for Apple Silicon Macs (macOS 26) and x86_64 Linux;
+elsewhere the formulae build from source. The versions and patches track the
+pins in
 [calibration-containers](https://github.com/HarryWeppner/calibration-containers),
 which builds the same tools as Podman images. Report bugs in the tools
 upstream, and problems with the formulae here.
