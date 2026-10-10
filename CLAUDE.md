@@ -144,8 +144,12 @@ Upstream's macOS wheel build is a working recipe for the macOS dependencies:
   - shapely 2.2 builds with meson-python, which Homebrew lacks. meson-python
     and pyproject-metadata are pure Python, so mrcal stages their sources as
     build-only resources on the `PYTHONPATH`, alongside Homebrew's Cython
-    (in `cython`'s libexec). It also needs `meson`, `ninja`, `pkgconf` and
-    `geos`.
+    (in `cython`'s libexec). It also needs `ninja`, `pkgconf` and `geos`.
+  - meson must run under the same Python as the build: on macOS, Cython's
+    link test looks for the Python running meson, and fails ("Cython requires
+    python3 dependency") when Homebrew's `meson` uses a newer one (it moved
+    to python@3.15 in October 2026). So meson is a build-only resource too,
+    and `MESON=.../meson.py` makes meson-python run it with python3.14.
   - mrcal's own package goes in python@3.14's site-packages, and its bundled
     packages in a `libexec` venv. A `.pth` file each way lets
     `python3.14 -c "import mrcal"` and the tools both work.
@@ -210,6 +214,11 @@ Linuxbrew is installed at `/home/linuxbrew/.linuxbrew`.
 `brew tap NAME PATH` clones the checkout, so uncommitted edits are invisible
 to `brew`. The tap directory here is instead a symlink to this checkout:
 `$(brew --repository)/Library/Taps/harryweppner/homebrew-calibration`.
+
+`brew update` updates this checkout like any tap: it stashes uncommitted
+changes and switches to `main`. Commit first, or afterwards run
+`git checkout <branch> && git stash pop`. `HOMEBREW_NO_AUTO_UPDATE=1` stops
+`brew install` from triggering it.
 
 Homebrew 7 refuses to load formulae from untrusted taps. Naming a formula on
 the command line trusts it, but its dependencies from this tap stay untrusted,
