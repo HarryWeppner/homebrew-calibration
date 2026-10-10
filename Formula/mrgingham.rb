@@ -37,6 +37,11 @@ class Mrgingham < Formula
     depends_on "gnu-getopt"
   end
 
+  # Not on PyPI itself: only its Python dependencies are resources
+  pypi_packages package_name:     "",
+                extra_packages:   %w[numpysane gnuplotlib],
+                exclude_packages: %w[numpy packaging]
+
   resource "numpysane" do
     url "https://files.pythonhosted.org/packages/16/3e/9ff84572ceb48c1c5ce08000192d13c2f904a650fb34a876e3f7f83acf79/numpysane-0.45.tar.gz"
     sha256 "caebeccc2c92d373ee3d850f45d7724cab1067e912efe8a8fa54167f5d1b4a82"
