@@ -242,7 +242,10 @@ brew linkage harryweppner/calibration/NAME
 - macOS can't be tested locally. Open a PR: `.github/workflows/tests.yml`
   runs `brew test-bot` on GitHub's macOS and Linux runners (about 30 and 55
   minutes for all four formulae). test-bot only builds formulae that a PR
-  changes. To publish a green PR's bottles, run the `publish.yml` workflow
+  changes. On a platform where a formula has no bottle yet, test-bot ignores
+  its failed build and the job still shows green ("1 failed step ignored!"),
+  so check the job's annotations, not just the check mark. To publish a green
+  PR's bottles, run the `publish.yml` workflow
   with its number; `brew pr-pull` pushes to `main` and closes the PR, then
   `git pull` here.
 
