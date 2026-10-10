@@ -9,6 +9,14 @@ class Mrbuild < Formula
   sha256 "a5667b6bc2adbce8dbf1072364a54cde973e155ed74408a3f1c87b426c31521e"
   license "MIT"
 
+  bottle do
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrbuild-1.21"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe:   "186ea44b2ba862d3f7a294fc4661e8955eef6410a42096378114a3d9150fed89"
+    sha256 cellar: :any_skip_relocation, arm64_sequoia: "f01d842f6fa1316e66c16190611fcd975de5494ac16060f9d47abc254f884f16"
+    sha256 cellar: :any_skip_relocation, arm64_linux:   "fa324768420bf1a82978fdad300c728a068b3b8f5715d88467e30a85e6a06b3a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8860ae5af8aee33e08c6f833f1f762da6ab4daec98c17d833d4704db5287f605"
+  end
+
   uses_from_macos "perl"
 
   # macOS: name libraries libxxx.ABI.dylib, not libxxx.dylib.ABI.
