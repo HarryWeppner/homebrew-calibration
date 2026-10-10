@@ -9,43 +9,44 @@ README.md is the user-facing doc.
 
 ## Plan
 
-Formulae, in this order (each depends on the earlier ones):
+The goal (agreed with Dima, October 2026) is homebrew-core, with each project
+as its own formula, in dependency order:
 
-1. **libdogleg**: needs `suite-sparse`.
-2. **vnlog**: Perl tools, the C library `libvnlog`, and Perl and Python modules.
-3. **mrgingham**: needs OpenCV.
-4. **mrcal**: the C library, the Python package and the `mrcal-*` tools.
+1. **mrbuild**: the build system, needed at build time by all the others.
+2. **libdogleg**: needs `suite-sparse`.
+3. **vnlog**: Perl tools, the C library `libvnlog`, and Perl and Python modules.
+4. **mrgingham**: needs OpenCV.
+5. **mrcal**: the C library, the Python package and the `mrcal-*` tools.
 
-A formula is done when:
+This tap is the proving ground until then. A formula is done when:
 
 - `brew install --build-from-source` succeeds;
 - `brew test` and `brew audit --strict --new` pass;
 - `brew linkage` is clean;
-- `brew test-bot` passes in CI on macOS and Linux.
-
-All four are done: PR #1 passed test-bot on macOS 26 (Apple Silicon) and
-Ubuntu, and its bottles were published with `brew pr-pull` on 2026-10-09.
+- `brew test-bot` passes in CI on macOS 15 and 26 and on x86_64 and arm64 Linux.
 
 Keep the `test do` blocks quick. Upstream's full test suites belong in the
 build, if anywhere: mrcal's `test-nosampling` is far too slow for `test do`.
 
-Later, with upstream's agreement, propose formulae to homebrew-core:
+Phases:
 
-- vnlog first;
-- then libdogleg as a dependency of mrcal;
-- then mrcal.
+1. **Upstream fixes and releases.** homebrew-core forbids downstream-only
+   patches and builds only from tags. Open PRs (October 2026): mrbuild #6–#10
+   (#10 sits on #7), mrcal #60–#63, vnlog #12, libdogleg #4. Releases needed:
+   mrbuild (at least #8), mrgingham with OpenCV 5 and the Homebrew-aware
+   `choose_mrbuild.mk`, mrcal with #60–#63. Dima is adding Homebrew lookup to
+   each `choose_mrbuild.mk` himself (vnlog v1.44 has it).
+2. **The tap.** Five formulae, CI on the full matrix; switch each to its
+   release tarball and drop each patch or workaround as the fixes land.
+3. **homebrew-core.** One PR, one commit per formula in the order above,
+   submitted by Harry (not Dima: the notability bar triples for the repo
+   owner). Disclose the AI use in the PR, and answer reviewers personally,
+   per Homebrew's AI policy.
 
-The barriers:
-
-- homebrew-core needs tagged stable releases.
-- Its notability threshold is 30 forks, 30 watchers or 75 stars, and three
-  times that for a self-submission. In October 2026 the projects stood at:
-  - mrcal: 326 stars;
-  - vnlog: 174 stars;
-  - mrgingham: 72 stars and 16 forks, just short;
-  - libdogleg: 24 stars.
-
-mrcal's install docs ask anyone who wants it in Homebrew to get in touch.
+Notability (30 forks, 30 watchers or 75 stars; 90/90/225 for self-submission),
+October 2026: mrcal 326 stars, vnlog 174, mrgingham 72 (16 forks, just short),
+libdogleg 24, mrbuild 9. libdogleg and mrbuild need an exception, argued as
+required dependencies of mrcal; mrgingham may too.
 
 ## Versions, patches and sources
 
@@ -62,19 +63,21 @@ The pins in October 2026:
 |---|---|
 | mrbuild | v1.21 |
 | libdogleg | v0.18 |
-| vnlog | v1.43 |
-| mrgingham | `8775c09` (v1.28-5) |
+| vnlog | v1.44 |
+| mrgingham | `09b2055` (v1.28-7, upstream's OpenCV 5 support) |
 | mrcal | `119d5b06` (v2.5.2-263) |
 
-A tap can use commit pins. homebrew-core would need releases: mrgingham v1.28,
-mrcal v2.5.2. Upstream's macOS wheel build is a working recipe for the macOS
-dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
+A tap can use commit pins; homebrew-core needs releases (see the plan).
+Upstream's macOS wheel build is a working recipe for the macOS dependencies:
+`mrcal/packaging/build-deps-{common,macos}.sh`.
 
 ## Findings that shape the formulae
 
-- **mrbuild** is build-only Makefile fragments, not packaged in Homebrew. Make
-  it a `resource` in each formula, not a formula. mrbuild already supports
-  macOS: it builds `.dylib`s, handles numpy includes, and deletes rpaths.
+- **mrbuild** is build-only Makefile fragments plus `make-pod-from-help`. Its
+  formula installs them as Debian does, in `include/mrbuild` and `bin`. The
+  others depend on it at build time and symlink it into `./mrbuild`, which
+  every project's `choose_mrbuild.mk` checks first (newer ones also look in
+  `$(HOMEBREW_PREFIX)/include/mrbuild`).
 - **Install paths.** Pass mrbuild's `INSTALL_ROOT_*` and `DESTDIR` explicitly.
   The Linux defaults guess Debian or Fedora layouts (`USRLIB`).
   - `PY3_MODULE_PATH` comes from `distutils`, which Python 3.12+ lacks. Set
@@ -113,12 +116,10 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
   re-signs them, and likewise mrcal's extensions. `brew linkage` passes on
   macOS in CI.
 - **OpenCV.** Homebrew's `opencv` is 5.0 (`opencv5.pc`, headers under
-  `include/opencv5`), and `opencv@4` exists. mrgingham builds with 5.0 after
-  one fix, on the `brew` branch of `~/Code/mrgingham` and inline in the
-  formula (`patch :DATA`): try `pkg-config opencv5`, and include
-  `opencv2/features2d.hpp`, since 5.0 dropped
-  `opencv2/features2d/features2d.hpp`. `cv::imread` still arrives via
-  `highgui.hpp`.
+  `include/opencv5`). Upstream's `09b2055` supports it: it tries `opencv4`
+  first, then `opencv5`, and includes `opencv2/features/features.hpp` on 5.
+  In a formula build Homebrew's pkg-config can't see the host's OpenCV 4, so
+  it finds 5.
   - `opencv5.pc` lists every module. Link with `-Wl,--as-needed` (Linux) or
     `-Wl,-dead_strip_dylibs` (macOS) to keep the five that mrgingham uses.
 - **stb** isn't in Homebrew. It's header-only, so use a pinned `resource`.
@@ -129,6 +130,10 @@ dependencies: `mrcal/packaging/build-deps-{common,macos}.sh`.
   - Not in Homebrew: numpysane and gnuplotlib (mrgingham and mrcal), shapely
     (mrcal). mrgingham puts them in a `libexec` virtualenv with system site
     packages, which its Python script's shebang points at.
+  - `pypi_packages package_name: "", extra_packages: ...` lets
+    `brew update-python-resources` resolve them, as homebrew-core requires;
+    neither project is on PyPI. mrgingham doesn't depend on `gnuplot` (it
+    pulls in Qt, only for `--show`); a caveat says so.
   - In Homebrew: `numpy`, `scipy`, `gnuplot`, `python-packaging` (numpysane
     needs `packaging` on Python 3.12+, which lacks distutils) and `cv2` (from
     `opencv`). Building numpysane, gnuplotlib and pyyaml needs
