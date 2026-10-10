@@ -24,7 +24,6 @@ class Mrcal < Formula
 
   depends_on "cython" => :build
   depends_on "harryweppner/calibration/mrbuild" => :build
-  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkgconf" => :build
   depends_on "python-setuptools" => :build
@@ -56,8 +55,8 @@ class Mrcal < Formula
   end
 
   pypi_packages package_name:     "",
-                extra_packages:   %w[numpysane gnuplotlib pyyaml shapely meson-python pyproject-metadata],
-                exclude_packages: %w[numpy packaging meson]
+                extra_packages:   %w[numpysane gnuplotlib pyyaml shapely meson meson-python pyproject-metadata],
+                exclude_packages: %w[numpy packaging]
 
   resource "stb" do
     url "https://github.com/nothings/stb/archive/2c980bb59875b0d32144a71867fbdebb2f77cd20.tar.gz"
@@ -89,6 +88,11 @@ class Mrcal < Formula
   end
 
   # Only to build shapely
+  resource "meson" do
+    url "https://files.pythonhosted.org/packages/f9/c9/8c9983f4f3d9c4e22fd76bcf8cd053e4472aefae45fd044669b6daa34b53/meson-1.12.1.tar.gz"
+    sha256 "ab0a6ca09f8ef70c564c8241fb5a23957886a0b53fb58412b5e07eaf07dba743"
+  end
+
   resource "meson-python" do
     url "https://files.pythonhosted.org/packages/b4/40/343ae23722d5d66a7b94b752d1b194202640995296379333b274b1860871/meson_python-0.22.1.tar.gz"
     sha256 "52c88628b0e5671592dc2306613fb5f6f3615fd24def059b9894f143b7f9a139"
@@ -128,12 +132,16 @@ class Mrcal < Formula
     # pyproject-metadata are pure Python, so putting their sources on the
     # PYTHONPATH is enough. Homebrew's Cython lives in its libexec; pyyaml
     # needs it to build its libyaml extension.
-    build_pythonpath = %w[meson-python pyproject-metadata].map do |r|
+    #
+    # meson must run under python3.14 too: Cython's link test looks for the
+    # Python that runs meson, and Homebrew's meson may use a newer one. MESON
+    # pointing at a meson.py makes meson-python run it with python3.14.
+    build_pythonpath = %w[meson meson-python pyproject-metadata].map do |r|
       (buildpath/r).install resource(r)
       buildpath/r
     end
     build_pythonpath << (formula_opt_libexec("cython")/site_packages)
-    with_env(PYTHONPATH: build_pythonpath.join(":")) do
+    with_env(PYTHONPATH: build_pythonpath.join(":"), MESON: (buildpath/"meson/meson.py").to_s) do
       venv.pip_install %w[pyyaml shapely].map { |r| resource(r) }, build_isolation: false
     end
     (libexec/site_packages/"homebrew-mrcal.pth").write "#{opt_prefix/site_packages}\n"
