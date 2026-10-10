@@ -23,6 +23,7 @@ class Mrcal < Formula
   end
 
   depends_on "cython" => :build
+  depends_on "harryweppner/calibration/mrbuild" => :build
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkgconf" => :build
@@ -52,17 +53,6 @@ class Mrcal < Formula
 
   on_linux do
     depends_on "zsh" => :build # test.sh
-  end
-
-  resource "mrbuild" do
-    url "https://github.com/dkogan/mrbuild/archive/refs/tags/v1.21.tar.gz"
-    sha256 "a5667b6bc2adbce8dbf1072364a54cde973e155ed74408a3f1c87b426c31521e"
-
-    # macOS: name libraries libxxx.ABI.dylib, not libxxx.dylib.ABI. Not sent
-    # upstream yet.
-    patch do
-      file "Patches/mrbuild/macos-dylib-names.patch"
-    end
   end
 
   resource "stb" do
@@ -141,7 +131,10 @@ class Mrcal < Formula
     end
     (libexec/site_packages/"homebrew-mrcal.pth").write "#{opt_prefix/site_packages}\n"
 
-    (buildpath/"mrbuild").install resource("mrbuild")
+    # Each project's choose_mrbuild.mk uses ./mrbuild if it exists
+    mrbuild = formula_opt_include("harryweppner/calibration/mrbuild")/"mrbuild"
+    (buildpath/"mrbuild").install_symlink mrbuild.children
+    (buildpath/"mrbuild").install_symlink formula_opt_bin("harryweppner/calibration/mrbuild") => "bin"
 
     # mrcal-rotate-corners parses its options with GNU getopt; macOS's has no long options
     if OS.mac?

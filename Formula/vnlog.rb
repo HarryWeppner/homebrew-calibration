@@ -5,8 +5,8 @@ class Vnlog < Formula
 
   desc "Tools and libraries to read, write and process tabular text data"
   homepage "https://github.com/dkogan/vnlog"
-  url "https://github.com/dkogan/vnlog/archive/refs/tags/v1.43.tar.gz"
-  sha256 "89949d1fa239fb53d31efe0dd36c0c91bc1485c3e3270f66eaed07d0e5f5eb85"
+  url "https://github.com/dkogan/vnlog/archive/refs/tags/v1.44.tar.gz"
+  sha256 "57baf02c4f7f7410d5365909235c83a9a29efb6a5649e0f9024ce03df3007449"
   license "LGPL-2.1-or-later"
 
   bottle do
@@ -15,6 +15,7 @@ class Vnlog < Formula
     sha256 cellar: :any, x86_64_linux: "98101ee41faa11fae35b810bc0354920c1018abb8f671bd6d9ea2d7d32339f94"
   end
 
+  depends_on "harryweppner/calibration/mrbuild" => :build
   depends_on "mawk"
   depends_on "moreutils"
   depends_on "numpy"
@@ -25,17 +26,6 @@ class Vnlog < Formula
   on_macos do
     # The GNUmakefile uses "define VAR =", which macOS's make 3.81 lacks
     depends_on "make" => :build
-  end
-
-  resource "mrbuild" do
-    url "https://github.com/dkogan/mrbuild/archive/refs/tags/v1.21.tar.gz"
-    sha256 "a5667b6bc2adbce8dbf1072364a54cde973e155ed74408a3f1c87b426c31521e"
-
-    # macOS: name libraries libxxx.ABI.dylib, not libxxx.dylib.ABI. Not sent
-    # upstream yet.
-    patch do
-      file "Patches/mrbuild/macos-dylib-names.patch"
-    end
   end
 
   resource "Exporter::Tiny" do
@@ -88,8 +78,6 @@ class Vnlog < Formula
     ENV.prepend_create_path "PERL5LIB", libexec/"lib/perl5"
     ENV.prepend_create_path "PERL5LIB", buildpath/"testlib/lib/perl5"
     resources.each do |r|
-      next if r.name == "mrbuild"
-
       base = test_resources.include?(r.name) ? buildpath/"testlib" : libexec
       r.stage do
         system "perl", "Makefile.PL", "INSTALL_BASE=#{base}", "NO_PERLLOCAL=1", "NO_PACKLIST=1"
@@ -97,7 +85,10 @@ class Vnlog < Formula
       end
     end
 
-    (buildpath/"mrbuild").install resource("mrbuild")
+    # Each project's choose_mrbuild.mk uses ./mrbuild if it exists
+    mrbuild = formula_opt_include("harryweppner/calibration/mrbuild")/"mrbuild"
+    (buildpath/"mrbuild").install_symlink mrbuild.children
+    (buildpath/"mrbuild").install_symlink formula_opt_bin("harryweppner/calibration/mrbuild") => "bin"
 
     # mrbuild finds the Python module path with distutils, which Python 3.12+
     # lacks. USE_DEBIAN_PATHS= skips its Debian layout guesses.

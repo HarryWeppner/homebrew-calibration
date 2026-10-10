@@ -11,24 +11,17 @@ class Libdogleg < Formula
     sha256 cellar: :any, x86_64_linux: "bd893125f1dfc86590b439e4d03a461c11c1c7de9a9b6a5bd330f92abeaeae27"
   end
 
+  depends_on "harryweppner/calibration/mrbuild" => :build
   depends_on "openblas"
   depends_on "suite-sparse"
 
   uses_from_macos "perl" => :build
 
-  resource "mrbuild" do
-    url "https://github.com/dkogan/mrbuild/archive/refs/tags/v1.21.tar.gz"
-    sha256 "a5667b6bc2adbce8dbf1072364a54cde973e155ed74408a3f1c87b426c31521e"
-
-    # macOS: name libraries libxxx.ABI.dylib, not libxxx.dylib.ABI. Not sent
-    # upstream yet.
-    patch do
-      file "Patches/mrbuild/macos-dylib-names.patch"
-    end
-  end
-
   def install
-    (buildpath/"mrbuild").install resource("mrbuild")
+    # Each project's choose_mrbuild.mk uses ./mrbuild if it exists
+    mrbuild = formula_opt_include("harryweppner/calibration/mrbuild")/"mrbuild"
+    (buildpath/"mrbuild").install_symlink mrbuild.children
+    (buildpath/"mrbuild").install_symlink formula_opt_bin("harryweppner/calibration/mrbuild") => "bin"
 
     # mrbuild takes the version from git or debian/changelog, and the tarball
     # has neither. USE_DEBIAN_PATHS= skips its Debian layout guesses and files

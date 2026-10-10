@@ -4,9 +4,9 @@ class Mrgingham < Formula
 
   desc "Chessboard corner finder for camera calibration"
   homepage "https://github.com/dkogan/mrgingham"
-  url "https://github.com/dkogan/mrgingham/archive/8775c0938e8187f93e9272c76bb3bcb83a95e111.tar.gz"
-  version "1.28-5-g8775c09"
-  sha256 "520deafc6d5588c190b4997000729e5339208976512ecb59936ac19c739965ec"
+  url "https://github.com/dkogan/mrgingham/archive/09b2055e67d3fa94eeb549698f070d0a5f4dd2d2.tar.gz"
+  version "1.28-7-g09b2055"
+  sha256 "62e9aa4696d5085de075a98be2cbdf649b30112c3e4a25df1aee3f1746cbd319"
   license all_of: ["LGPL-2.1-or-later", "MIT"]
 
   # Only release tags: the repo also has pre-release, wheel/, debian/,
@@ -22,9 +22,9 @@ class Mrgingham < Formula
     sha256 cellar: :any, x86_64_linux: "78f4633b55ee426c2f5d3c0e2d05daee498bf356ce2377a0d0afba9b43643371"
   end
 
+  depends_on "harryweppner/calibration/mrbuild" => :build
   depends_on "pkgconf" => :build
   depends_on "python-setuptools" => :build
-  depends_on "gnuplot"
   depends_on "numpy"
   depends_on "opencv"
   depends_on "python-packaging"
@@ -37,17 +37,6 @@ class Mrgingham < Formula
     depends_on "gnu-getopt"
   end
 
-  resource "mrbuild" do
-    url "https://github.com/dkogan/mrbuild/archive/refs/tags/v1.21.tar.gz"
-    sha256 "a5667b6bc2adbce8dbf1072364a54cde973e155ed74408a3f1c87b426c31521e"
-
-    # macOS: name libraries libxxx.ABI.dylib, not libxxx.dylib.ABI. Not sent
-    # upstream yet.
-    patch do
-      file "Patches/mrbuild/macos-dylib-names.patch"
-    end
-  end
-
   resource "numpysane" do
     url "https://files.pythonhosted.org/packages/16/3e/9ff84572ceb48c1c5ce08000192d13c2f904a650fb34a876e3f7f83acf79/numpysane-0.45.tar.gz"
     sha256 "caebeccc2c92d373ee3d850f45d7724cab1067e912efe8a8fa54167f5d1b4a82"
@@ -58,9 +47,6 @@ class Mrgingham < Formula
     sha256 "35ad06a4adf16dba0e4be0f74615e7beb6b8e0358c4cf5c0f98fef85bc46aac8"
   end
 
-  # Build with OpenCV 5. Not sent upstream yet.
-  patch :DATA
-
   def python3
     "python3.14"
   end
@@ -70,10 +56,13 @@ class Mrgingham < Formula
     # gnuplotlib. The venv sees numpy, vnlog and packaging in Homebrew's
     # site-packages.
     venv = virtualenv_create(libexec, python3)
-    venv.pip_install resources.reject { |r| r.name == "mrbuild" }, build_isolation: false
+    venv.pip_install resources, build_isolation: false
     rewrite_shebang python_shebang_rewrite_info(libexec/"bin/python"), "mrgingham-observe-pixel-uncertainty"
 
-    (buildpath/"mrbuild").install resource("mrbuild")
+    # Each project's choose_mrbuild.mk uses ./mrbuild if it exists
+    mrbuild = formula_opt_include("harryweppner/calibration/mrbuild")/"mrbuild"
+    (buildpath/"mrbuild").install_symlink mrbuild.children
+    (buildpath/"mrbuild").install_symlink formula_opt_bin("harryweppner/calibration/mrbuild") => "bin"
 
     # mrgingham-rotate-corners parses its options with GNU getopt; macOS's has no long options
     if OS.mac?
@@ -120,6 +109,13 @@ class Mrgingham < Formula
     end
   end
 
+  def caveats
+    <<~EOS
+      mrgingham-observe-pixel-uncertainty --show plots with gnuplot:
+        brew install gnuplot
+    EOS
+  end
+
   test do
     (testpath/"board.py").write <<~PY
       import numpy as np
@@ -154,34 +150,3 @@ class Mrgingham < Formula
     assert_match "observed point distribution", output
   end
 end
-
-__END__
-diff --git a/Makefile b/Makefile
-index ee4d7cc..ad0b17f 100644
---- a/Makefile
-+++ b/Makefile
-@@ -24,10 +24,10 @@ BIN_SOURCES += test-dump-chessboard-corners.cc test-dump-blobs.cc test-find-grid
- LIB_SOURCES := find_grid.cc find_blobs.cc find_chessboard_corners.cc mrgingham.cc ChESS.c
- 
- # The opencv people (or maybe the Debian people?) have renamed the opencv.pc
--# file in opencv 4. So now I look for both version 4 and the default. What will
--# happen with opencv5? We'll see!
--CXXFLAGS_CV := $(shell pkg-config --cflags opencv4 2>/dev/null || pkg-config --cflags opencv 2>/dev/null)
--LDLIBS_CV   := $(shell pkg-config --libs   opencv4 2>/dev/null || pkg-config --libs   opencv 2>/dev/null)
-+# file in opencv 4, and again in opencv 5. So I look for each of these, newest
-+# first
-+CXXFLAGS_CV := $(shell pkg-config --cflags opencv5 2>/dev/null || pkg-config --cflags opencv4 2>/dev/null || pkg-config --cflags opencv 2>/dev/null)
-+LDLIBS_CV   := $(shell pkg-config --libs   opencv5 2>/dev/null || pkg-config --libs   opencv4 2>/dev/null || pkg-config --libs   opencv 2>/dev/null)
- CCXXFLAGS += $(CXXFLAGS_CV)
- LDLIBS    += $(LDLIBS_CV) -lpthread
- 
-diff --git a/find_blobs.cc b/find_blobs.cc
-index af625dd..c510df9 100644
---- a/find_blobs.cc
-+++ b/find_blobs.cc
-@@ -1,4 +1,4 @@
--#include <opencv2/features2d/features2d.hpp>
-+#include <opencv2/features2d.hpp>
- #include <opencv2/highgui/highgui.hpp>
- 
- #include "point.hh"
