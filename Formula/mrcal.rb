@@ -18,8 +18,11 @@ class Mrcal < Formula
 
   bottle do
     root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrcal-2.5.2-263-g119d5b06"
-    sha256 cellar: :any, arm64_tahoe:  "00c740aa873e631bd1cdace558d30431396ef0ea0391b183db03b83788324888"
-    sha256 cellar: :any, x86_64_linux: "e58c8bb0c5dcef1a9e1c4bc21d5793e43f31e6fa004cb9435b55956c94bc17ef"
+    rebuild 1
+    sha256 cellar: :any, arm64_tahoe:   "24295913783164f541015ed8c82e56b6e4a3a8e060294e5b58ee53ada738e855"
+    sha256 cellar: :any, arm64_sequoia: "6ef7dda1d3007d9d5f651ebc32718c0f3aba04da8bae3622853b6bc2691ef0ff"
+    sha256 cellar: :any, arm64_linux:   "35f79634425c7cf39f4b11d166a93519cb7b222327f0d736f314437f08b31412"
+    sha256 cellar: :any, x86_64_linux:  "7acd441137497adbccb1e0c96af7064012f93c7051854390fe39efae924afebf"
   end
 
   depends_on "cython" => :build
