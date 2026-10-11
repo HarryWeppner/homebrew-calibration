@@ -10,6 +10,8 @@ on:
   schedule:
     # Every day at 18:35 UTC
     - cron: 35 18 * * *
+  # Run it by hand, e.g. right after an upstream release
+  workflow_dispatch:
 
 permissions: {}
 
