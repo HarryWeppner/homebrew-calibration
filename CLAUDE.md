@@ -31,11 +31,19 @@ build, if anywhere: mrcal's `test-nosampling` is far too slow for `test do`.
 Phases:
 
 1. **Upstream fixes and releases.** homebrew-core forbids downstream-only
-   patches and builds only from tags. Open PRs (October 2026): mrbuild #6–#10
-   (#10 sits on #7), mrcal #60–#63, vnlog #12, libdogleg #4. Releases needed:
-   mrbuild (at least #8), mrgingham with OpenCV 5 and the Homebrew-aware
-   `choose_mrbuild.mk`, mrcal with #60–#63. Dima is adding Homebrew lookup to
-   each `choose_mrbuild.mk` himself (vnlog v1.44 has it).
+   patches and builds only from tags. Status on 2026-10-23:
+   - mrbuild: every fix is on master, untagged (v1.21 is the latest tag).
+     macOS names 3c964ff (Dima's version of #8), Linux rpaths 8a5c059
+     (his #9), native-is-not-cross 252b31d and 65b493e (#7), numpy fallback
+     17414c2 (#10), module path eeba340 (#6). Dima asked for checks before
+     tagging. Known problem: `_CROSS_BUILDING` expands `DEB_BUILD_MULTIARCH`
+     first, so `dpkg-buildpackage -a` cross-builds look native; the fix is
+     `$(and $(DEB_HOST_MULTIARCH), ...)` (reported on #7).
+   - Open: mrcal #60–#63 and #65 (#65 is needed for macOS with mrbuild
+     master), vnlog #12, libdogleg #4.
+   - Releases needed: mrbuild, mrgingham (OpenCV 5 is untagged, after
+     v1.28), mrcal with #60–#63 and #65. Dima added Homebrew lookup to each
+     `choose_mrbuild.mk` (vnlog v1.44 is the only release with it).
 2. **The tap.** Five formulae, CI on the full matrix; switch each to its
    release tarball and drop each patch or workaround as the fixes land.
 3. **homebrew-core.** One PR, one commit per formula in the order above,
@@ -44,9 +52,10 @@ Phases:
    per Homebrew's AI policy.
 
 Notability (30 forks, 30 watchers or 75 stars; 90/90/225 for self-submission),
-October 2026: mrcal 326 stars, vnlog 174, mrgingham 72 (16 forks, just short),
-libdogleg 24, mrbuild 9. libdogleg and mrbuild need an exception, argued as
-required dependencies of mrcal; mrgingham may too.
+2026-10-23: mrcal 332 stars and 35 forks, vnlog 174 stars, mrgingham 73 stars
+(16 forks, just short), libdogleg 24 stars, mrbuild 9 stars. libdogleg and
+mrbuild need an exception, argued as required dependencies of mrcal; mrgingham
+may too.
 
 ## Versions, patches and sources
 
@@ -82,7 +91,7 @@ Upstream's macOS wheel build is a working recipe for the macOS dependencies:
   The Linux defaults guess Debian or Fedora layouts (`USRLIB`).
   - `PY3_MODULE_PATH` comes from `distutils`, which Python 3.12+ lacks. Set
     `INSTALL_ROOT_PY3_MODULES` yourself, or add `python-setuptools` as a build
-    dependency.
+    dependency. mrbuild master (eeba340) falls back to `sysconfig`.
   - Install libdogleg's header as `include/dogleg.h` (`INSTALL_ROOT_INCLUDE`),
     since mrcal does `#include <dogleg.h>`.
   - Pass `VERSION=#{version}`: mrbuild reads the version from git or
@@ -94,18 +103,23 @@ Upstream's macOS wheel build is a working recipe for the macOS dependencies:
   and looks for Debian's sysconfig file. Pass `DEB_HOST_MULTIARCH=` and
   `DEB_HOST_GNU_TYPE=` (empty), `PYTHON_VERSION_FOR_EXTENSIONS=3.14`, and
   `_INCLUDENUMPY_FROM_PYTHON=1` (on Linux mrbuild asks `pkg-config numpy`,
-  which Homebrew lacks).
+  which Homebrew lacks). mrbuild master fixes the first (252b31d) and the
+  last (17414c2). Keep `DEB_HOST_GNU_TYPE=` anyway: when `dpkg-architecture`
+  answers, mrbuild runs `$(DEB_HOST_GNU_TYPE)-pkg-config`, which this Fedora
+  host lacks.
 - **Linux rpaths.** mrbuild's install runs `chrpath -d` when `chrpath` exists,
   which deletes Homebrew's RPATH too, and the libraries then load the host's
   `/lib64/libcholmod.so`. Pass `_STRIP_RPATH_FILES=true` on Linux.
-  `brew linkage --test` catches this as "Unwanted system libraries".
+  `brew linkage --test` catches this as "Unwanted system libraries". mrbuild
+  master (8a5c059) strips only its own `$ORIGIN` entries.
 - **macOS library names.** mrbuild names macOS libraries Linux-style
-  (`libxxx.dylib.ABI`), and `brew audit` rejects them as non-libraries. The fix
-  is on the `brew` branch of `~/Code/mrbuild`, and the tap carries it as
-  `Patches/mrbuild/macos-dylib-names.patch`, applied to each formula's mrbuild
-  resource (`patch do file ... end`). It builds `libxxx.ABI.TAIL.dylib` with
-  install name `libxxx.ABI.dylib`; `libxxx.dylib.ABI` stays in the build tree
-  as a symlink for project Makefiles (mrcal's refers to it), uninstalled.
+  (`libxxx.dylib.ABI`), and `brew audit` rejects them as non-libraries. The tap
+  carries a fix as `Patches/mrbuild/macos-dylib-names.patch` in the mrbuild
+  formula. It builds `libxxx.ABI.TAIL.dylib` with install name
+  `libxxx.ABI.dylib`, and keeps `libxxx.dylib.ABI` in the build tree as a
+  symlink, uninstalled, because mrcal's Makefile names it. mrbuild master
+  (3c964ff) makes the same files but no such symlink, so mrcal needs #65
+  (`$(call MRBUILD_LIBSO_ABI,libmrcal)`) to build on macOS with it.
 - **GNU getopt.** `mrgingham-rotate-corners` and `mrcal-rotate-corners` parse
   options with GNU `getopt -l`. macOS's BSD getopt has no long options, so
   both formulae depend on `gnu-getopt` on macOS and point the scripts at it.
@@ -186,15 +200,16 @@ Upstream's macOS wheel build is a working recipe for the macOS dependencies:
   build runs it. It needs zsh (a build dependency on Linux).
   `test-optimizer-callback.py` fails on upstream master; the formula drops it
   from `test.sh` with `inreplace`, as calibration-containers' patch does.
+  mrcal#63 regenerates its reference data.
 - **mrcal's near-singularity test** fails 6 of 1350 checks on Apple Silicon.
   mrcal's results match Linux's; at a rotation of exactly pi, r and -r are the
   same rotation, and the test's numpy reference takes the sign from roundoff.
   The tap carries an interim patch,
   `Patches/mrcal/test-near-singularity-either-form.patch`, that skips only
-  checks hitting that ambiguity (none on Linux). The upstream fix should
-  compare against the closer form instead, converting the reference gradient.
-- **mrcal's upstream fixes**, on the `brew` branch of `~/Code/mrcal` and
-  inline in the formula (`patch :DATA`, the diff from the pin to `brew`):
+  checks hitting that ambiguity (none on Linux). mrcal#62 compares against
+  the closer form instead, converting the reference gradient.
+- **mrcal's upstream fixes**, inline in the formula (`patch :DATA`) and
+  sent upstream as mrcal#60 and #61:
   - Install `_attribute.h`: `mrcal.h` and `basic-geometry.h` include it, and
     `DIST_INCLUDE` missed it.
   - `minimath_generate.pl` used List::MoreUtils only for `pairwise`; it now

@@ -107,7 +107,7 @@ class Mrcal < Formula
   end
 
   # Install _attribute.h, and drop List::MoreUtils from minimath_generate.pl.
-  # Not sent upstream yet.
+  # Sent upstream as dkogan/mrcal#60 and #61.
   patch :DATA
 
   # At a rotation of exactly pi, test-poseutils-near-singularity.py's numpy
