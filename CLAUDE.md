@@ -36,11 +36,21 @@ Phases:
      macOS names 3c964ff (Dima's version of #8), Linux rpaths 8a5c059
      (his #9), native-is-not-cross 252b31d and 65b493e (#7), numpy fallback
      17414c2 (#10), module path eeba340 (#6). Dima asked for checks before
-     tagging. Known problem: `_CROSS_BUILDING` expands `DEB_BUILD_MULTIARCH`
-     first, so `dpkg-buildpackage -a` cross-builds look native; the fix is
-     `$(and $(DEB_HOST_MULTIARCH), ...)` (reported on #7).
-   - Open: mrcal #60–#63 and #65 (#65 is needed for macOS with mrbuild
-     master), vnlog #12, libdogleg #4.
+     tagging; the results went to him by email on 2026-10-23. Master has
+     three problems, each with an open PR:
+     - #11: `_CROSS_BUILDING` expands `DEB_BUILD_MULTIARCH` first, so
+       `dpkg-buildpackage -a` cross-builds look native.
+     - #12: 2b9f5f3's `private LDFLAGS +=` needs GNU make 3.82; macOS's
+       `make` is 3.81, so no library builds on macOS.
+     - #13: 8a5c059 reads rpaths with `$(DEB_HOST_GNU_TYPE)-objdump`; where
+       that's missing (Fedora with `dpkg-dev`), install deletes the whole
+       RPATH.
+     Tap PR #4 (check only, not for publishing) builds master plus #12 and
+     #13, with none of the mrbuild workarounds but `DEB_HOST_GNU_TYPE=` in
+     mrgingham and mrcal: green on all four platforms. On this Fedora host,
+     mrbuild, libdogleg and vnlog built with it pass `brew linkage --test`.
+   - Open: mrbuild #11–#13, mrcal #60–#63 and #65 (#65 is needed for macOS
+     with mrbuild master), vnlog #12, libdogleg #4.
    - Releases needed: mrbuild, mrgingham (OpenCV 5 is untagged, after
      v1.28), mrcal with #60–#63 and #65. Dima added Homebrew lookup to each
      `choose_mrbuild.mk` (vnlog v1.44 is the only release with it).
@@ -111,7 +121,11 @@ Upstream's macOS wheel build is a working recipe for the macOS dependencies:
   which deletes Homebrew's RPATH too, and the libraries then load the host's
   `/lib64/libcholmod.so`. Pass `_STRIP_RPATH_FILES=true` on Linux.
   `brew linkage --test` catches this as "Unwanted system libraries". mrbuild
-  master (8a5c059) strips only its own `$ORIGIN` entries.
+  master (8a5c059) strips only its own `$ORIGIN` entries, but reads the
+  RPATH with `$(DEB_HOST_GNU_TYPE)-objdump`: on this Fedora host that
+  doesn't exist, and the whole RPATH is still deleted. mrbuild#13 reads it
+  with `chrpath -l`. CI's images have no `chrpath`, so only a local build
+  here shows this.
 - **macOS library names.** mrbuild names macOS libraries Linux-style
   (`libxxx.dylib.ABI`), and `brew audit` rejects them as non-libraries. The tap
   carries a fix as `Patches/mrbuild/macos-dylib-names.patch` in the mrbuild
@@ -120,6 +134,12 @@ Upstream's macOS wheel build is a working recipe for the macOS dependencies:
   symlink, uninstalled, because mrcal's Makefile names it. mrbuild master
   (3c964ff) makes the same files but no such symlink, so mrcal needs #65
   (`$(call MRBUILD_LIBSO_ABI,libmrcal)`) to build on macOS with it.
+- **GNU make on macOS** is 3.81. vnlog's `define VAR =` and mrbuild master's
+  `private` (2b9f5f3, fixed by mrbuild#12) need 3.82. To test make 3.81 on
+  Linux, build it from the GNU tarball with `CFLAGS="-O2 -std=gnu89
+  -D__alloca=alloca -Dbsd_signal=signal -D__stat=stat -Wno-error
+  -Wno-implicit-function-declaration -Wno-incompatible-pointer-types
+  -Wno-int-conversion"`; it reproduces macOS's `private` error.
 - **GNU getopt.** `mrgingham-rotate-corners` and `mrcal-rotate-corners` parse
   options with GNU `getopt -l`. macOS's BSD getopt has no long options, so
   both formulae depend on `gnu-getopt` on macOS and point the scripts at it.
@@ -159,6 +179,10 @@ Upstream's macOS wheel build is a working recipe for the macOS dependencies:
     and pyproject-metadata are pure Python, so mrcal stages their sources as
     build-only resources on the `PYTHONPATH`, alongside Homebrew's Cython
     (in `cython`'s libexec). It also needs `ninja`, `pkgconf` and `geos`.
+  - Homebrew's `cython` moved to python@3.15 in October 2026, so its
+    packages are in `libexec/lib/python3.15/site-packages`. The formula on
+    `main` still looks in `python3.14`; tap PR #4's branch globs
+    `lib/python3*/site-packages`, and CI passes with it.
   - meson must run under the same Python as the build: on macOS, Cython's
     link test looks for the Python running meson, and fails ("Cython requires
     python3 dependency") when Homebrew's `meson` uses a newer one (it moved
