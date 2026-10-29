@@ -99,6 +99,13 @@ class Mrcal < Formula
     file "Patches/mrcal/test-near-singularity-either-form.patch"
   end
 
+  # Python 3.15's argparse rejects the unescaped "%" in a help string of
+  # test-uncertainty-broadcasting.py. Upstream ce5d2517, on master only.
+  # https://github.com/dkogan/mrcal/pull/67
+  patch do
+    file "Patches/mrcal/release-2.5-escape-percent.patch"
+  end
+
   def python3
     "python3.15"
   end
