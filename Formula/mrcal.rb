@@ -93,10 +93,11 @@ class Mrcal < Formula
   end
 
   # At a rotation of exactly pi, test-poseutils-near-singularity.py's numpy
-  # reference picks the sign of the result from roundoff, which differs on
-  # Apple Silicon. Skip only those checks; see the patch for details.
+  # reference picks the sign of the result from roundoff, which differs
+  # between platforms. Compare against whichever form is closer instead.
+  # https://github.com/dkogan/mrcal/pull/62
   patch do
-    file "Patches/mrcal/test-near-singularity-either-form.patch"
+    file "Patches/mrcal/near-singularity-either-form-upstream.patch"
   end
 
   # Python 3.15's argparse rejects the unescaped "%" in a help string of
