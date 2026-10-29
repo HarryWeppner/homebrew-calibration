@@ -8,6 +8,7 @@ class Mrcal < Formula
   version "2.5.2-263-g119d5b06"
   sha256 "6afd329d1f07624d3ee101175043f0ff4cfc522b1226284ed3ce4c08d107f368"
   license "Apache-2.0"
+  revision 1
 
   # Only release tags: the repo also has pre-release, wheel/, debian/,
   # mrbuild_ and dated tags, and the dated ones sort as newer.
@@ -27,6 +28,7 @@ class Mrcal < Formula
 
   depends_on "cython" => :build
   depends_on "harryweppner/calibration/mrbuild" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkgconf" => :build
   depends_on "python-setuptools" => :build
@@ -43,7 +45,7 @@ class Mrcal < Formula
   depends_on "openblas"
   depends_on "opencv"
   depends_on "python-packaging"
-  depends_on "python@3.14"
+  depends_on "python@3.15"
   depends_on "scipy"
   depends_on "suite-sparse"
 
@@ -58,8 +60,8 @@ class Mrcal < Formula
   end
 
   pypi_packages package_name:     "",
-                extra_packages:   %w[numpysane gnuplotlib pyyaml shapely meson meson-python pyproject-metadata],
-                exclude_packages: %w[numpy packaging]
+                extra_packages:   %w[numpysane gnuplotlib pyyaml shapely meson-python pyproject-metadata],
+                exclude_packages: %w[numpy packaging meson]
 
   resource "stb" do
     url "https://github.com/nothings/stb/archive/2c980bb59875b0d32144a71867fbdebb2f77cd20.tar.gz"
@@ -91,11 +93,6 @@ class Mrcal < Formula
   end
 
   # Only to build shapely
-  resource "meson" do
-    url "https://files.pythonhosted.org/packages/f9/c9/8c9983f4f3d9c4e22fd76bcf8cd053e4472aefae45fd044669b6daa34b53/meson-1.12.1.tar.gz"
-    sha256 "ab0a6ca09f8ef70c564c8241fb5a23957886a0b53fb58412b5e07eaf07dba743"
-  end
-
   resource "meson-python" do
     url "https://files.pythonhosted.org/packages/b4/40/343ae23722d5d66a7b94b752d1b194202640995296379333b274b1860871/meson_python-0.22.1.tar.gz"
     sha256 "52c88628b0e5671592dc2306613fb5f6f3615fd24def059b9894f143b7f9a139"
@@ -118,7 +115,7 @@ class Mrcal < Formula
   end
 
   def python3
-    "python3.14"
+    "python3.15"
   end
 
   def install
@@ -126,7 +123,7 @@ class Mrcal < Formula
 
     # The Python packages that aren't in Homebrew go in a venv, which also
     # sees numpy, scipy, cv2 and packaging in Homebrew's site-packages. The
-    # mrcal package itself goes in python3.14's site-packages, and a .pth file
+    # mrcal package itself goes in python3.15's site-packages, and a .pth file
     # each way lets "import mrcal" work from either.
     venv = virtualenv_create(libexec, python3)
     venv.pip_install %w[numpysane gnuplotlib].map { |r| resource(r) }, build_isolation: false
@@ -135,16 +132,12 @@ class Mrcal < Formula
     # pyproject-metadata are pure Python, so putting their sources on the
     # PYTHONPATH is enough. Homebrew's Cython lives in its libexec; pyyaml
     # needs it to build its libyaml extension.
-    #
-    # meson must run under python3.14 too: Cython's link test looks for the
-    # Python that runs meson, and Homebrew's meson may use a newer one. MESON
-    # pointing at a meson.py makes meson-python run it with python3.14.
-    build_pythonpath = %w[meson meson-python pyproject-metadata].map do |r|
+    build_pythonpath = %w[meson-python pyproject-metadata].map do |r|
       (buildpath/r).install resource(r)
       buildpath/r
     end
     build_pythonpath << (formula_opt_libexec("cython")/site_packages)
-    with_env(PYTHONPATH: build_pythonpath.join(":"), MESON: (buildpath/"meson/meson.py").to_s) do
+    with_env(PYTHONPATH: build_pythonpath.join(":")) do
       venv.pip_install %w[pyyaml shapely].map { |r| resource(r) }, build_isolation: false
     end
     (libexec/site_packages/"homebrew-mrcal.pth").write "#{opt_prefix/site_packages}\n"
