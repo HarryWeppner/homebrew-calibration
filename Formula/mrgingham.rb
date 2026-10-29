@@ -18,11 +18,11 @@ class Mrgingham < Formula
   end
 
   bottle do
-    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrgingham-1.28-7-g09b2055"
-    sha256 cellar: :any, arm64_tahoe:   "4e4b9fe7e8c605b969f5368fd26b28e51bb8a221f9714dfbd24452e35912dd65"
-    sha256 cellar: :any, arm64_sequoia: "e6bf7f40bac8752bf397bc9d4a3b8c3eda8840996332e3782c104ceecee64656"
-    sha256 cellar: :any, arm64_linux:   "a5010558fe76859262b73f1740efd6402a893b1297fd689c4a109690daa4f077"
-    sha256 cellar: :any, x86_64_linux:  "15e3195d9c91245ffa970364777a44c2e767d68f18077bffbd0b61f0253b0f2d"
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrgingham-1.28-7-g09b2055_1"
+    sha256 cellar: :any, arm64_tahoe:   "9e0dfbb631ba6996e5ec0de7d763afb98f03ab963f211a6eeff22550cbb21538"
+    sha256 cellar: :any, arm64_sequoia: "756dc7fce2bf36dce4d2336e717ee20b44f36864a5d9f3107bb6f5ad4378d5a1"
+    sha256 cellar: :any, arm64_linux:   "1caf496cab237f48e8fec8fcd0d91d385546b3963d0ad7f7fa2cbb9c36fa8934"
+    sha256 cellar: :any, x86_64_linux:  "df03ec84c77a99dbcaa7a47945b820bbf67711abd81cf8e9940e7db5121dfb17"
   end
 
   depends_on "harryweppner/calibration/mrbuild" => :build
