@@ -11,11 +11,11 @@ class Vnlog < Formula
   revision 1
 
   bottle do
-    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/vnlog-1.44"
-    sha256 cellar: :any, arm64_tahoe:   "654c508f6a06c61fd203a7294ea6c979385403bd1405388cb2bc786f525ee7cc"
-    sha256 cellar: :any, arm64_sequoia: "b2c5b8ce895be80817d66ad972857a0369b27574a954be8abfeab0ad42d11b7b"
-    sha256 cellar: :any, arm64_linux:   "c1308084c33ece16bed55daa369463469a58aa5d1160f24c30c4e95d25751674"
-    sha256 cellar: :any, x86_64_linux:  "5225d0dcc9641f324710ea2d123e7281e6c7b96e679683dd44b205d619ae4f96"
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/vnlog-1.44_1"
+    sha256 cellar: :any, arm64_tahoe:   "8c0b46ddfdec6776660a846f356ecbfdf650979bee43219509e39ef3a8b84fb9"
+    sha256 cellar: :any, arm64_sequoia: "cfa2c79dd3306f9bcf572debc5b6da468e4e676941c1493bee153bbaee2888bf"
+    sha256 cellar: :any, arm64_linux:   "de020c64556fe0be010dbe61dedf886811f5956f40c366d2945adf49a3bd35f7"
+    sha256 cellar: :any, x86_64_linux:  "a29c79907ee96b468b1b0476366a5eab125e91ac19a439668dd66f66650da30d"
   end
 
   depends_on "harryweppner/calibration/mrbuild" => :build
