@@ -60,7 +60,9 @@ Phases:
      the mrbuild workarounds and no `DEB_*` variables: green on all four
      platforms with every formula built (run 40889414959, 2026-10-29).
    - Releases needed: mrbuild, mrgingham (OpenCV 5 is untagged, after
-     v1.28), mrcal 2.5.x. Dima added Homebrew lookup to each
+     v1.28; v1.28 fails to build against Homebrew's OpenCV 5, checked
+     2026-10-29), mrcal 2.5.x. Asked by email on 2026-10-29, with #67 and
+     #68; optional: vnlog with f8c55a6, libdogleg with the licence fix. Dima added Homebrew lookup to each
      `choose_mrbuild.mk` (vnlog v1.44 is the only release with it).
 2. **The tap.** Five formulae, CI on the full matrix; switch each to its
    release tarball and drop each patch or workaround as the fixes land.
