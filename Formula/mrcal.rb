@@ -18,12 +18,11 @@ class Mrcal < Formula
   end
 
   bottle do
-    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrcal-2.5.2-263-g119d5b06"
-    rebuild 1
-    sha256 cellar: :any, arm64_tahoe:   "24295913783164f541015ed8c82e56b6e4a3a8e060294e5b58ee53ada738e855"
-    sha256 cellar: :any, arm64_sequoia: "6ef7dda1d3007d9d5f651ebc32718c0f3aba04da8bae3622853b6bc2691ef0ff"
-    sha256 cellar: :any, arm64_linux:   "35f79634425c7cf39f4b11d166a93519cb7b222327f0d736f314437f08b31412"
-    sha256 cellar: :any, x86_64_linux:  "7acd441137497adbccb1e0c96af7064012f93c7051854390fe39efae924afebf"
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrcal-2.5.2-263-g119d5b06_1"
+    sha256 cellar: :any, arm64_tahoe:   "d2ce8fd0c241a99eb9f402e8801ec009badb9e744729f8d943648d49f97c91c0"
+    sha256 cellar: :any, arm64_sequoia: "800e8f6d8df8b8d7fa04a4d9d7bfb128cc3f2b50d08896d7be62f274350ffb7b"
+    sha256 cellar: :any, arm64_linux:   "7e5e21d83a224543eaddf7ed68a6dcd1e7f31c62105f1742ec306c912b239f94"
+    sha256 cellar: :any, x86_64_linux:  "a0f60696f8fc3ac240f65c33141f09edacc6c28c5ed4cbb0317205d60ad19a2d"
   end
 
   depends_on "cython" => :build
