@@ -4,25 +4,19 @@ class Mrcal < Formula
 
   desc "Camera calibration and stereo toolkit"
   homepage "https://mrcal.secretsauce.net"
-  url "https://github.com/dkogan/mrcal/archive/119d5b06e5c4628b2c03a7e7f82fe04445d8d8ac.tar.gz"
-  version "2.5.2-263-g119d5b06"
-  sha256 "6afd329d1f07624d3ee101175043f0ff4cfc522b1226284ed3ce4c08d107f368"
+  # The release-2.5 branch, which the next 2.5.x release will come from
+  url "https://github.com/dkogan/mrcal/archive/cc8de2b6f33e72e5daf31aebc3902d9adb3d39f8.tar.gz"
+  version "2.5.2-75-gcc8de2b6"
+  sha256 "efd832ca9582d21ec73c857f105d577e4b20517dacdc9d87cfeb590dfb590f1c"
   license "Apache-2.0"
-  revision 1
+  # This check branch moved from master (2.5.2-263) to release-2.5 (2.5.2-75)
+  version_scheme 1
 
   # Only release tags: the repo also has pre-release, wheel/, debian/,
   # mrbuild_ and dated tags, and the dated ones sort as newer.
   livecheck do
     url "https://github.com/dkogan/mrcal.git"
     regex(/^v?(\d+(?:\.\d+)+)$/i)
-  end
-
-  bottle do
-    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrcal-2.5.2-263-g119d5b06_1"
-    sha256 cellar: :any, arm64_tahoe:   "d2ce8fd0c241a99eb9f402e8801ec009badb9e744729f8d943648d49f97c91c0"
-    sha256 cellar: :any, arm64_sequoia: "800e8f6d8df8b8d7fa04a4d9d7bfb128cc3f2b50d08896d7be62f274350ffb7b"
-    sha256 cellar: :any, arm64_linux:   "7e5e21d83a224543eaddf7ed68a6dcd1e7f31c62105f1742ec306c912b239f94"
-    sha256 cellar: :any, x86_64_linux:  "a0f60696f8fc3ac240f65c33141f09edacc6c28c5ed4cbb0317205d60ad19a2d"
   end
 
   depends_on "cython" => :build
@@ -49,10 +43,6 @@ class Mrcal < Formula
   depends_on "suite-sparse"
 
   uses_from_macos "perl" => :build
-
-  on_macos do
-    depends_on "gnu-getopt"
-  end
 
   on_linux do
     depends_on "zsh" => :build # test.sh
@@ -102,15 +92,19 @@ class Mrcal < Formula
     sha256 "8809a4df6fe08279b39a8890669506ed3158e0617855ac9aff098fcbe772ae4c"
   end
 
-  # Install _attribute.h, and drop List::MoreUtils from minimath_generate.pl.
-  # Sent upstream as dkogan/mrcal#60 and #61.
-  patch :DATA
-
   # At a rotation of exactly pi, test-poseutils-near-singularity.py's numpy
-  # reference picks the sign of the result from roundoff, which differs on
-  # Apple Silicon. Skip only those checks; see the patch for details.
+  # reference picks the sign of the result from roundoff, which differs
+  # between platforms. Compare against whichever form is closer instead.
+  # https://github.com/dkogan/mrcal/pull/62
   patch do
-    file "Patches/mrcal/test-near-singularity-either-form.patch"
+    file "Patches/mrcal/near-singularity-either-form-upstream.patch"
+  end
+
+  # Python 3.15's argparse rejects the unescaped "%" in a help string of
+  # test-uncertainty-broadcasting.py. Upstream ce5d2517, on master only.
+  # https://github.com/dkogan/mrcal/pull/67
+  patch do
+    file "Patches/mrcal/release-2.5-escape-percent.patch"
   end
 
   def python3
@@ -146,43 +140,27 @@ class Mrcal < Formula
     (buildpath/"mrbuild").install_symlink mrbuild.children
     (buildpath/"mrbuild").install_symlink formula_opt_bin("harryweppner/calibration/mrbuild") => "bin"
 
-    # mrcal-rotate-corners parses its options with GNU getopt; macOS's has no long options
-    if OS.mac?
-      inreplace "mrcal-rotate-corners", "$(getopt ", "$(#{formula_opt_bin("gnu-getopt")}/getopt "
-    end
     (buildpath/"stb/stb").install resource("stb").files("stb_image.h")
     ENV.append "CFLAGS", "-I#{buildpath}/stb"
 
     # The *-genpywrap.py generators run "python3", and need numpysane
     ENV.prepend_path "PATH", libexec/"bin"
 
-    # DEB_HOST_*= stops mrbuild treating a host with dpkg-architecture (such
-    # as Ubuntu) as a Debian cross-build, which looks for Debian's Python.
-    # mrbuild finds numpy with pkg-config on Linux; ask Python instead.
     args = %W[
       VERSION=#{version}
       USE_LOCAL_STB_IMPLEMENTATION=1
       USE_DEBIAN_PATHS=
-      DEB_HOST_MULTIARCH=
-      DEB_HOST_GNU_TYPE=
       PYTHON_VERSION_FOR_EXTENSIONS=#{python3.delete_prefix("python")}
-      _INCLUDENUMPY_FROM_PYTHON=1
       DESTDIR=#{prefix}
       INSTALL_ROOT_LIB=/lib
       INSTALL_ROOT_BIN=/bin
       INSTALL_ROOT_INCLUDE=/include/mrcal
       INSTALL_ROOT_MAN=/share/man
-      PY3_MODULE_PATH=#{site_packages}
       INSTALL_ROOT_PY3_MODULES=/#{site_packages}
     ]
-    # On Linux, mrbuild's install runs "chrpath -d", which also deletes the
-    # RPATH that points at Homebrew's lib.
-    args << "_STRIP_RPATH_FILES=true" if OS.linux?
 
     system "make", *args
-    # The quick test set takes about a minute. test-optimizer-callback.py
-    # fails on upstream master, so skip it.
-    inreplace "test.sh", %r{^\s*"test/test-optimizer-callback.py"\n}, ""
+    # The quick test set takes about a minute
     system "make", "test-nosampling", *args
     system "make", "install", *args
 
@@ -234,59 +212,3 @@ class Mrcal < Formula
     assert_equal "12", shell_output("./test").strip
   end
 end
-
-__END__
-diff --git a/Makefile b/Makefile
-index 15e611ea..c6a2701f 100644
---- a/Makefile
-+++ b/Makefile
-@@ -72,6 +72,7 @@ EXTRA_CLEAN += minimath/minimath_generated.h
- 
- DIST_INCLUDE +=			\
- 	mrcal.h			\
-+	_attribute.h		\
- 	image.h			\
- 	internal.h		\
- 	basic-geometry.h	\
-diff --git a/minimath/minimath_generate.pl b/minimath/minimath_generate.pl
-index 044098b9..7ce9ca3f 100755
---- a/minimath/minimath_generate.pl
-+++ b/minimath/minimath_generate.pl
-@@ -3,7 +3,6 @@ use strict;
- use warnings;
- use feature qw(say);
- use List::Util qw(min);
--use List::MoreUtils qw(pairwise);
- 
- say "// THIS IS AUTO-GENERATED BY $0. DO NOT EDIT BY HAND\n";
- say "// This contains dot products, norms, basic vector arithmetic and multiplication\n";
-@@ -110,8 +109,7 @@ EOC
-     my $isym_row = _getSymmetricIndices_row(\%isymHash, $i, $n);
-     my @cols = 0..$n-1;
- 
--    our ($a,$b);
--    my @sum_components = pairwise {"s[$a]*v[$b]"} @$isym_row, @cols;
-+    my @sum_components = map {"s[$isym_row->[$_]]*v[$cols[$_]]"} 0..$#cols;
-     $vout .= "  vout[$i] = " . join(' + ', @sum_components) . ";\n";
-   }
- 
-@@ -144,8 +142,7 @@ EOC
-     my @js = 0..$n-1;
-     my @im = map {$i + $_*$m} @js;
- 
--    our ($a,$b);
--    my @sum_components = pairwise {"m[$a]*v[$b]"} @im, @js;
-+    my @sum_components = map {"m[$im[$_]]*v[$js[$_]]"} 0..$#js;
-     $vout .= "  vout[$i] = " . join(' + ', @sum_components) . ";\n";
-   }
- 
-@@ -166,8 +163,7 @@ EOC
-     my @js = 0..$n-1;
-     my @im = map {$i*$n + $_} @js;
- 
--    our ($a,$b);
--    my @sum_components = pairwise {"mt[$a]*v[$b]"} @im, @js;
-+    my @sum_components = map {"mt[$im[$_]]*v[$js[$_]]"} 0..$#js;
-     $vout .= "  vout[$i] = " . join(' + ', @sum_components) . ";\n";
-   }
- 

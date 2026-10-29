@@ -77,28 +77,18 @@ class Mrgingham < Formula
       inreplace "mrgingham-rotate-corners", "$(getopt ", "$(#{formula_opt_bin("gnu-getopt")}/getopt "
     end
 
-    # DEB_HOST_*= stops mrbuild treating a host with dpkg-architecture (such
-    # as Ubuntu) as a Debian cross-build, which looks for Debian's Python.
-    # mrbuild finds numpy with pkg-config on Linux; ask Python instead.
     site_packages = Language::Python.site_packages(python3)
     args = %W[
       VERSION=#{version}
       USE_DEBIAN_PATHS=
-      DEB_HOST_MULTIARCH=
-      DEB_HOST_GNU_TYPE=
       PYTHON_VERSION_FOR_EXTENSIONS=#{python3.delete_prefix("python")}
-      _INCLUDENUMPY_FROM_PYTHON=1
       DESTDIR=#{prefix}
       INSTALL_ROOT_LIB=/lib
       INSTALL_ROOT_BIN=/bin
       INSTALL_ROOT_INCLUDE=/include/mrgingham
       INSTALL_ROOT_MAN=/share/man
-      PY3_MODULE_PATH=#{site_packages}
       INSTALL_ROOT_PY3_MODULES=/#{site_packages}
     ]
-    # On Linux, mrbuild's install runs "chrpath -d", which also deletes the
-    # RPATH that points at Homebrew's lib.
-    args << "_STRIP_RPATH_FILES=true" if OS.linux?
     # opencv5.pc lists every OpenCV module; link only the ones in use
     ENV.append "LDFLAGS", OS.mac? ? "-Wl,-dead_strip_dylibs" : "-Wl,--as-needed"
 

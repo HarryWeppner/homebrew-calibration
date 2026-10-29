@@ -93,8 +93,7 @@ class Vnlog < Formula
     (buildpath/"mrbuild").install_symlink mrbuild.children
     (buildpath/"mrbuild").install_symlink formula_opt_bin("harryweppner/calibration/mrbuild") => "bin"
 
-    # mrbuild finds the Python module path with distutils, which Python 3.12+
-    # lacks. USE_DEBIAN_PATHS= skips its Debian layout guesses.
+    # USE_DEBIAN_PATHS= skips mrbuild's Debian layout guesses.
     site_packages = Language::Python.site_packages(python3)
     args = %W[
       USE_DEBIAN_PATHS=
@@ -104,12 +103,8 @@ class Vnlog < Formula
       INSTALL_ROOT_INCLUDE=/include/vnlog
       INSTALL_ROOT_MAN=/share/man
       INSTALL_ROOT_PERL_MODULES=/lib/perl5
-      PY3_MODULE_PATH=#{site_packages}
       INSTALL_ROOT_PY3_MODULES=/#{site_packages}
     ]
-    # On Linux, mrbuild's install runs "chrpath -d", which also deletes the
-    # RPATH that points at Homebrew's lib.
-    args << "_STRIP_RPATH_FILES=true" if OS.linux?
 
     make = OS.mac? ? "gmake" : "make"
     system make, *args
