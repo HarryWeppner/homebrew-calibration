@@ -8,6 +8,7 @@ class Vnlog < Formula
   url "https://github.com/dkogan/vnlog/archive/refs/tags/v1.44.tar.gz"
   sha256 "57baf02c4f7f7410d5365909235c83a9a29efb6a5649e0f9024ce03df3007449"
   license "LGPL-2.1-or-later"
+  revision 1
 
   bottle do
     root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/vnlog-1.44"
@@ -21,7 +22,7 @@ class Vnlog < Formula
   depends_on "mawk"
   depends_on "moreutils"
   depends_on "numpy"
-  depends_on "python@3.14"
+  depends_on "python@3.15"
 
   uses_from_macos "perl"
 
@@ -72,7 +73,7 @@ class Vnlog < Formula
   end
 
   def python3
-    "python3.14"
+    "python3.15"
   end
 
   def install
@@ -113,7 +114,7 @@ class Vnlog < Formula
     make = OS.mac? ? "gmake" : "make"
     system make, *args
     # The Python parser test runs "python3" from the PATH
-    with_env(PATH: "#{formula_opt_libexec("python@3.14")}/bin:#{ENV["PATH"]}") do
+    with_env(PATH: "#{formula_opt_libexec("python@3.15")}/bin:#{ENV["PATH"]}") do
       system make, "check", *args
     end
     system make, "install", *args

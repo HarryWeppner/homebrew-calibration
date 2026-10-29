@@ -8,6 +8,7 @@ class Mrgingham < Formula
   version "1.28-7-g09b2055"
   sha256 "62e9aa4696d5085de075a98be2cbdf649b30112c3e4a25df1aee3f1746cbd319"
   license all_of: ["LGPL-2.1-or-later", "MIT"]
+  revision 1
 
   # Only release tags: the repo also has pre-release, wheel/, debian/,
   # mrbuild_ and dated tags, and the dated ones sort as newer.
@@ -30,7 +31,7 @@ class Mrgingham < Formula
   depends_on "numpy"
   depends_on "opencv"
   depends_on "python-packaging"
-  depends_on "python@3.14"
+  depends_on "python@3.15"
   depends_on "vnlog"
 
   uses_from_macos "perl" => :build
@@ -55,7 +56,7 @@ class Mrgingham < Formula
   end
 
   def python3
-    "python3.14"
+    "python3.15"
   end
 
   def install
