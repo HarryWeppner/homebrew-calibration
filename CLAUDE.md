@@ -45,18 +45,20 @@ Phases:
    - libdogleg: #4 (licence version) merged, untagged; v0.18 is the latest
      tag.
    - vnlog: #12 closed; Dima's f8c55a6 takes `all` from List::Util, falling
-     back to List::MoreUtils. He asked whether that was the only problem;
-     not answered yet.
-   - mrcal: #60, #61 and #65 merged on 2026-10-25; #63 closed; #62 is open.
-     Dima wants the packaging built from the `release-2.5` branch, from
-     which he'll tag a 2.5.x release; master will become 3.0 and has
-     half-done work. Base new mrcal PRs on `release-2.5`. It has #61 and
-     #65, and needs neither #60 (it has no `_attribute.h`) nor GNU getopt
-     (it has no `mrcal-rotate-corners`).
-   - Tap PR #4 (check only, not for publishing) pins mrbuild e92a044 with
-     none of the mrbuild workarounds and no `DEB_*` variables: green on all
-     four platforms (run 40167026977) and on this Fedora host. It's being
-     moved to mrcal `release-2.5`.
+     back to List::MoreUtils. A release with it should let the formula drop
+     List::MoreUtils and its two dependencies (untested).
+   - mrcal: #60, #61 and #65 merged on 2026-10-25; #63 closed. Dima wants
+     the packaging built from the `release-2.5` branch, from which he'll tag
+     a 2.5.x release; master will become 3.0 and has half-done work. Base
+     new mrcal PRs on `release-2.5`. It has #61 and #65, and needs neither
+     #60 (it has no `_attribute.h`) nor GNU getopt (it has no
+     `mrcal-rotate-corners`). Open against it: #67 (Dima's ce5d2517, the
+     `%` escape Python 3.15 needs) and #68 (#62's near-singularity fix;
+     #62 itself, against master, is closed with a pointer).
+   - Tap PR #4 (check only, not for publishing) pins mrbuild e92a044 and
+     mrcal `release-2.5` (cc8de2b6) with #67 and #68 as patches, none of
+     the mrbuild workarounds and no `DEB_*` variables: green on all four
+     platforms with every formula built (run 40889414959, 2026-10-29).
    - Releases needed: mrbuild, mrgingham (OpenCV 5 is untagged, after
      v1.28), mrcal 2.5.x. Dima added Homebrew lookup to each
      `choose_mrbuild.mk` (vnlog v1.44 is the only release with it).
@@ -187,6 +189,9 @@ Upstream's macOS wheel build is a working recipe for the macOS dependencies:
     3.15 only), as did `cython`, `meson`, `python-packaging` and
     `python-setuptools`; `numpy` and `scipy` ship for both 3.14 and 3.15.
     Under 3.14, mrcal's build-time tests fail with "No module named 'cv2'".
+    Python 3.15's argparse also rejects a help string with an unescaped `%`
+    when the argument is added ("badly formed help string"); mrcal master
+    fixed its one case in ce5d2517, and #67 brings that to `release-2.5`.
     When Homebrew moves again, move vnlog, mrgingham and mrcal together.
   - shapely 2.2 builds with meson-python, which Homebrew lacks. meson-python
     and pyproject-metadata are pure Python, so mrcal stages their sources as
@@ -235,14 +240,17 @@ Upstream's macOS wheel build is a working recipe for the macOS dependencies:
   regularization rework; the formula drops it from `test.sh` with
   `inreplace`, as calibration-containers' patch does. Dima closed mrcal#63,
   which regenerated its reference data. `release-2.5` doesn't have the
-  rework; whether the test passes there is still to be seen.
+  rework, and the test passes there (24 of 24), so no skip is needed.
 - **mrcal's near-singularity test** fails 6 of 1350 checks on Apple Silicon.
   mrcal's results match Linux's; at a rotation of exactly pi, r and -r are the
   same rotation, and the test's numpy reference takes the sign from roundoff.
-  The tap carries an interim patch,
-  `Patches/mrcal/test-near-singularity-either-form.patch`, that skips only
-  checks hitting that ambiguity (none on Linux). mrcal#62 compares against
-  the closer form instead, converting the reference gradient.
+  It's platform-dependent: on `release-2.5`, skipping just the flipped cases
+  dropped 1 case on Linux (1347 checks, as upstream's own hand-written skip
+  does with a generic build) and 2 on macOS (1344). `main` carries that
+  interim skip, `Patches/mrcal/test-near-singularity-either-form.patch`.
+  mrcal#68 (on `release-2.5`; was #62) compares against the closer form
+  instead, converting the reference gradient, and every check passes on
+  all four platforms.
 - **mrcal's upstream fixes**, inline in the formula (`patch :DATA`), merged
   upstream as mrcal#60 and #61 (`release-2.5` needs neither patch):
   - Install `_attribute.h`: `mrcal.h` and `basic-geometry.h` include it, and
