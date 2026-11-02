@@ -5,9 +5,9 @@ class Mrcal < Formula
   desc "Camera calibration and stereo toolkit"
   homepage "https://mrcal.secretsauce.net"
   # The release-2.5 branch, which the next 2.5.x release will come from
-  url "https://github.com/dkogan/mrcal/archive/55dfeaa383666f9a7252dc9833608e70494874d9.tar.gz"
-  version "2.5.2-92-g55dfeaa3"
-  sha256 "ae69461bae5f7aa73611647bf693e3211328441fd99825d88d65582735bdff7a"
+  url "https://github.com/dkogan/mrcal/archive/0cb3581a1b525a83cc104a2471a1feb955fe2b4d.tar.gz"
+  version "2.5.2-93-g0cb3581a"
+  sha256 "49d16f1d902263933e9f3fcb1d62a31cb785899ff753e0ca66ee5061b0ba7246"
   license "Apache-2.0"
   # This check branch moved from master (2.5.2-263) to release-2.5 (2.5.2-9x)
   version_scheme 1
@@ -90,13 +90,6 @@ class Mrcal < Formula
   resource "pyproject-metadata" do
     url "https://files.pythonhosted.org/packages/4f/76/1cae539918a7b1746d624c2f01560b793c22cd8c081157505bb9bbf0e34d/pyproject_metadata-0.12.1.tar.gz"
     sha256 "8809a4df6fe08279b39a8890669506ed3158e0617855ac9aff098fcbe772ae4c"
-  end
-
-  # mrcal.h and basic-geometry.h include _attribute.h, which release-2.5
-  # doesn't install. Upstream 8b1451d1, on master only.
-  # https://github.com/dkogan/mrcal/pull/69
-  patch do
-    file "Patches/mrcal/release-2.5-install-attribute-h.patch"
   end
 
   def python3
