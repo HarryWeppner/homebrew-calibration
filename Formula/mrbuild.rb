@@ -5,10 +5,8 @@ class Mrbuild < Formula
 
   desc "Make-based build system for C/C++ libraries, tools and Python extensions"
   homepage "https://github.com/dkogan/mrbuild"
-  # master, for the checks before the next release
-  url "https://github.com/dkogan/mrbuild/archive/e92a04403419c1c5711035268d81bad6e4d809a8.tar.gz"
-  version "1.21-14-ge92a044"
-  sha256 "712e4819d5459be77fbf3f96eee1e890da9bc42d64a45418b160bd65f88017d9"
+  url "https://github.com/dkogan/mrbuild/archive/refs/tags/v1.22.tar.gz"
+  sha256 "a622adac0a4184dbf7374c114337f6699e1ec4691fb35ec3105f66f6aeb18fd2"
   license "MIT"
 
   uses_from_macos "perl"

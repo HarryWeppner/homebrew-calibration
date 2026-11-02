@@ -5,11 +5,11 @@ class Mrcal < Formula
   desc "Camera calibration and stereo toolkit"
   homepage "https://mrcal.secretsauce.net"
   # The release-2.5 branch, which the next 2.5.x release will come from
-  url "https://github.com/dkogan/mrcal/archive/cc8de2b6f33e72e5daf31aebc3902d9adb3d39f8.tar.gz"
-  version "2.5.2-75-gcc8de2b6"
-  sha256 "efd832ca9582d21ec73c857f105d577e4b20517dacdc9d87cfeb590dfb590f1c"
+  url "https://github.com/dkogan/mrcal/archive/55dfeaa383666f9a7252dc9833608e70494874d9.tar.gz"
+  version "2.5.2-92-g55dfeaa3"
+  sha256 "ae69461bae5f7aa73611647bf693e3211328441fd99825d88d65582735bdff7a"
   license "Apache-2.0"
-  # This check branch moved from master (2.5.2-263) to release-2.5 (2.5.2-75)
+  # This check branch moved from master (2.5.2-263) to release-2.5 (2.5.2-9x)
   version_scheme 1
 
   # Only release tags: the repo also has pre-release, wheel/, debian/,
@@ -92,19 +92,11 @@ class Mrcal < Formula
     sha256 "8809a4df6fe08279b39a8890669506ed3158e0617855ac9aff098fcbe772ae4c"
   end
 
-  # At a rotation of exactly pi, test-poseutils-near-singularity.py's numpy
-  # reference picks the sign of the result from roundoff, which differs
-  # between platforms. Compare against whichever form is closer instead.
-  # https://github.com/dkogan/mrcal/pull/62
+  # mrcal.h and basic-geometry.h include _attribute.h, which release-2.5
+  # doesn't install. Upstream 8b1451d1, on master only.
+  # https://github.com/dkogan/mrcal/pull/69
   patch do
-    file "Patches/mrcal/near-singularity-either-form-upstream.patch"
-  end
-
-  # Python 3.15's argparse rejects the unescaped "%" in a help string of
-  # test-uncertainty-broadcasting.py. Upstream ce5d2517, on master only.
-  # https://github.com/dkogan/mrcal/pull/67
-  patch do
-    file "Patches/mrcal/release-2.5-escape-percent.patch"
+    file "Patches/mrcal/release-2.5-install-attribute-h.patch"
   end
 
   def python3
