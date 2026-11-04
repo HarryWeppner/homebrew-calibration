@@ -7,11 +7,11 @@ class Libdogleg < Formula
 
   bottle do
     root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/libdogleg-0.18"
-    rebuild 1
-    sha256 cellar: :any, arm64_tahoe:   "6eadadcfdcf278524763d4961b6367b96adcd515c5a5a1400ae589c632700a9b"
-    sha256 cellar: :any, arm64_sequoia: "9a9805f2da0188dd7cc7fa45c85e859b2356f6b8290f77e1d95f771e5bca4e67"
-    sha256 cellar: :any, arm64_linux:   "3f95e35fd890b9e0a8b6dc3916709d29f9867e214ec0da012ff388a541612ec4"
-    sha256 cellar: :any, x86_64_linux:  "016d0789aee6e20e5ad97e382c200cae1e37d3265f1ce53021a25e948145979f"
+    rebuild 2
+    sha256 cellar: :any, arm64_tahoe:   "d356a992772c480b11ab58df4f07bab57a603573cd5e881615372512bfdc2f99"
+    sha256 cellar: :any, arm64_sequoia: "9253d8918f2eb35fec752ac49a25ff98d44ccad6f55c0d06d748d544180b6479"
+    sha256 cellar: :any, arm64_linux:   "c0afdd74cf0cad5f343f445a772c2d795b96d16ea1580163878b313bbad73fcd"
+    sha256 cellar: :any, x86_64_linux:  "7b1f03899e3da85ca2a48d00042a4b9a591e6502963d59112ee76d4ee2197a92"
   end
 
   depends_on "harryweppner/calibration/mrbuild" => :build
