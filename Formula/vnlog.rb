@@ -5,18 +5,9 @@ class Vnlog < Formula
 
   desc "Tools and libraries to read, write and process tabular text data"
   homepage "https://github.com/dkogan/vnlog"
-  url "https://github.com/dkogan/vnlog/archive/refs/tags/v1.44.tar.gz"
-  sha256 "57baf02c4f7f7410d5365909235c83a9a29efb6a5649e0f9024ce03df3007449"
+  url "https://github.com/dkogan/vnlog/archive/refs/tags/v1.45.tar.gz"
+  sha256 "ec9ab6f21b900beaae0e7e40892d587ac900d3cb36cf3ac1b175dbe9a2c10b7f"
   license "LGPL-2.1-or-later"
-  revision 1
-
-  bottle do
-    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/vnlog-1.44_1"
-    sha256 cellar: :any, arm64_tahoe:   "8c0b46ddfdec6776660a846f356ecbfdf650979bee43219509e39ef3a8b84fb9"
-    sha256 cellar: :any, arm64_sequoia: "cfa2c79dd3306f9bcf572debc5b6da468e4e676941c1493bee153bbaee2888bf"
-    sha256 cellar: :any, arm64_linux:   "de020c64556fe0be010dbe61dedf886811f5956f40c366d2945adf49a3bd35f7"
-    sha256 cellar: :any, x86_64_linux:  "a29c79907ee96b468b1b0476366a5eab125e91ac19a439668dd66f66650da30d"
-  end
 
   depends_on "harryweppner/calibration/mrbuild" => :build
   depends_on "mawk"
@@ -29,21 +20,6 @@ class Vnlog < Formula
   on_macos do
     # The GNUmakefile uses "define VAR =", which macOS's make 3.81 lacks
     depends_on "make" => :build
-  end
-
-  resource "Exporter::Tiny" do
-    url "https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.006003.tar.gz"
-    sha256 "6499f09a6432cf87b133fb9580a8a9a9a6c566821346b1fdee95f7b64c0317b1"
-  end
-
-  resource "List::MoreUtils::XS" do
-    url "https://cpan.metacpan.org/authors/id/R/RE/REHSACK/List-MoreUtils-XS-0.430.tar.gz"
-    sha256 "e8ce46d57c179eecd8758293e9400ff300aaf20fefe0a9d15b9fe2302b9cb242"
-  end
-
-  resource "List::MoreUtils" do
-    url "https://cpan.metacpan.org/authors/id/R/RE/REHSACK/List-MoreUtils-0.430.tar.gz"
-    sha256 "63b1f7842cd42d9b538d1e34e0330de5ff1559e4c2737342506418276f646527"
   end
 
   resource "Text::Aligner" do
@@ -93,8 +69,7 @@ class Vnlog < Formula
     (buildpath/"mrbuild").install_symlink mrbuild.children
     (buildpath/"mrbuild").install_symlink formula_opt_bin("harryweppner/calibration/mrbuild") => "bin"
 
-    # mrbuild finds the Python module path with distutils, which Python 3.12+
-    # lacks. USE_DEBIAN_PATHS= skips its Debian layout guesses.
+    # USE_DEBIAN_PATHS= skips mrbuild's Debian layout guesses.
     site_packages = Language::Python.site_packages(python3)
     args = %W[
       USE_DEBIAN_PATHS=
@@ -104,12 +79,8 @@ class Vnlog < Formula
       INSTALL_ROOT_INCLUDE=/include/vnlog
       INSTALL_ROOT_MAN=/share/man
       INSTALL_ROOT_PERL_MODULES=/lib/perl5
-      PY3_MODULE_PATH=#{site_packages}
       INSTALL_ROOT_PY3_MODULES=/#{site_packages}
     ]
-    # On Linux, mrbuild's install runs "chrpath -d", which also deletes the
-    # RPATH that points at Homebrew's lib.
-    args << "_STRIP_RPATH_FILES=true" if OS.linux?
 
     make = OS.mac? ? "gmake" : "make"
     system make, *args
