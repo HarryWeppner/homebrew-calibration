@@ -9,6 +9,14 @@ class Mrbuild < Formula
   sha256 "a622adac0a4184dbf7374c114337f6699e1ec4691fb35ec3105f66f6aeb18fd2"
   license "MIT"
 
+  bottle do
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrbuild-1.22"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe:   "2144c8fdd3da432beb8fb18d67bd3a6ae6ded2313ea46e1548ece55bfdc1e550"
+    sha256 cellar: :any_skip_relocation, arm64_sequoia: "1d9badc6277b9bfb842b95b14ab08c79f3ca66aefaafa4c426d9ecbd4cab420f"
+    sha256 cellar: :any_skip_relocation, arm64_linux:   "aefb41f8863fc34170c7622f5835e16a324a8db3b69883c7262f276ec3824194"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "41f599c5a24c26fffea3bc3ee0442cf9d3a3d64303407f6eac5da1128e622c93"
+  end
+
   uses_from_macos "perl"
 
   def install
