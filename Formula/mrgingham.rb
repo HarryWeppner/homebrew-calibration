@@ -105,13 +105,6 @@ class Mrgingham < Formula
     end
   end
 
-  def caveats
-    <<~EOS
-      mrgingham-observe-pixel-uncertainty --show plots with gnuplot:
-        brew install gnuplot
-    EOS
-  end
-
   test do
     (testpath/"board.py").write <<~PY
       import numpy as np
