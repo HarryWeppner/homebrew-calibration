@@ -37,10 +37,6 @@ class Libdogleg < Formula
       INSTALL_ROOT_INCLUDE=/include
       INSTALL_ROOT_MAN=/share/man
     ]
-    # On Linux, mrbuild's install runs "chrpath -d", which also deletes the
-    # RPATH that points at Homebrew's lib. On macOS it only deletes the
-    # @loader_path entries it added itself.
-    args << "_STRIP_RPATH_FILES=true" if OS.linux?
     system "make", *args
     %w[sparse dense dense-products-packed-upper dense-products-unpacked].each do |mode|
       system "./sample", "--check", mode
