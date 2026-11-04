@@ -52,6 +52,8 @@ class Mrcal < Formula
     depends_on "zsh" => :build # test.sh
   end
 
+  # Resolve only the dependencies: mrcal's own Python package builds with
+  # make. meson-python and pyproject-metadata only build shapely.
   pypi_packages package_name:     "",
                 extra_packages:   %w[numpysane gnuplotlib pyyaml shapely meson-python pyproject-metadata],
                 exclude_packages: %w[numpy packaging meson]
@@ -61,9 +63,6 @@ class Mrcal < Formula
     version "2026-08-02"
     sha256 "9a955b1b49a4410088a2e0ee2a9c057c3c907d0c1d75454144cb980aca0ba515"
   end
-
-  # Resolve only the dependencies: mrcal's own Python package builds with
-  # make. meson-python and pyproject-metadata only build shapely.
 
   resource "numpysane" do
     url "https://files.pythonhosted.org/packages/16/3e/9ff84572ceb48c1c5ce08000192d13c2f904a650fb34a876e3f7f83acf79/numpysane-0.45.tar.gz"
