@@ -4,25 +4,15 @@ class Mrgingham < Formula
 
   desc "Chessboard corner finder for camera calibration"
   homepage "https://github.com/dkogan/mrgingham"
-  url "https://github.com/dkogan/mrgingham/archive/09b2055e67d3fa94eeb549698f070d0a5f4dd2d2.tar.gz"
-  version "1.28-7-g09b2055"
-  sha256 "62e9aa4696d5085de075a98be2cbdf649b30112c3e4a25df1aee3f1746cbd319"
+  url "https://github.com/dkogan/mrgingham/archive/refs/tags/v1.29.tar.gz"
+  sha256 "f20d48c001abec4f667f785f587059d2097a20fb50a995d923cb96c1c8b0f508"
   license all_of: ["LGPL-2.1-or-later", "MIT"]
-  revision 1
 
   # Only release tags: the repo also has pre-release, wheel/, debian/,
   # mrbuild_ and dated tags, and the dated ones sort as newer.
   livecheck do
     url "https://github.com/dkogan/mrgingham.git"
     regex(/^v?(\d+(?:\.\d+)+)$/i)
-  end
-
-  bottle do
-    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrgingham-1.28-7-g09b2055_1"
-    sha256 cellar: :any, arm64_tahoe:   "9e0dfbb631ba6996e5ec0de7d763afb98f03ab963f211a6eeff22550cbb21538"
-    sha256 cellar: :any, arm64_sequoia: "756dc7fce2bf36dce4d2336e717ee20b44f36864a5d9f3107bb6f5ad4378d5a1"
-    sha256 cellar: :any, arm64_linux:   "1caf496cab237f48e8fec8fcd0d91d385546b3963d0ad7f7fa2cbb9c36fa8934"
-    sha256 cellar: :any, x86_64_linux:  "df03ec84c77a99dbcaa7a47945b820bbf67711abd81cf8e9940e7db5121dfb17"
   end
 
   depends_on "harryweppner/calibration/mrbuild" => :build
@@ -77,28 +67,18 @@ class Mrgingham < Formula
       inreplace "mrgingham-rotate-corners", "$(getopt ", "$(#{formula_opt_bin("gnu-getopt")}/getopt "
     end
 
-    # DEB_HOST_*= stops mrbuild treating a host with dpkg-architecture (such
-    # as Ubuntu) as a Debian cross-build, which looks for Debian's Python.
-    # mrbuild finds numpy with pkg-config on Linux; ask Python instead.
     site_packages = Language::Python.site_packages(python3)
     args = %W[
       VERSION=#{version}
       USE_DEBIAN_PATHS=
-      DEB_HOST_MULTIARCH=
-      DEB_HOST_GNU_TYPE=
       PYTHON_VERSION_FOR_EXTENSIONS=#{python3.delete_prefix("python")}
-      _INCLUDENUMPY_FROM_PYTHON=1
       DESTDIR=#{prefix}
       INSTALL_ROOT_LIB=/lib
       INSTALL_ROOT_BIN=/bin
       INSTALL_ROOT_INCLUDE=/include/mrgingham
       INSTALL_ROOT_MAN=/share/man
-      PY3_MODULE_PATH=#{site_packages}
       INSTALL_ROOT_PY3_MODULES=/#{site_packages}
     ]
-    # On Linux, mrbuild's install runs "chrpath -d", which also deletes the
-    # RPATH that points at Homebrew's lib.
-    args << "_STRIP_RPATH_FILES=true" if OS.linux?
     # opencv5.pc lists every OpenCV module; link only the ones in use
     ENV.append "LDFLAGS", OS.mac? ? "-Wl,-dead_strip_dylibs" : "-Wl,--as-needed"
 
