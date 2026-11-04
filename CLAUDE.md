@@ -147,11 +147,18 @@ Upstream's macOS wheel build is a working recipe for the macOS dependencies:
   mrgingham depends on `gnu-getopt` on macOS and points the script at it;
   without it, its manpage generation fails. mrcal 2.5.x has no
   `mrcal-rotate-corners`, so mrcal doesn't need this (master does).
-- **macOS rpaths.** mrbuild strips its `@loader_path` rpaths on macOS, and
-  links Python extensions without `LDFLAGS`. The mrgingham formula adds rpaths
-  to `bin/mrgingham` and the extension with `MachO::Tools.add_rpath`, then
+- **macOS rpaths.** mrbuild names macOS libraries `@rpath/libfoo.N.dylib`,
+  links with `@loader_path` rpaths, and deletes every `@loader_path` rpath at
+  install (`Makefile.common.footer`), so installed binaries and extensions
+  can't find their libraries. The mrgingham formula adds rpaths to
+  `bin/mrgingham` and the extension with `MachO::Tools.add_rpath`, then
   re-signs them, and likewise mrcal's extensions. `brew linkage` passes on
   macOS in CI.
+  - mrbuild keeps rpaths that don't start with `@loader_path`, so passing
+    `-Wl,-rpath,#{lib}` in `LDFLAGS` might replace the `MachO` code
+    (untested). mrcal links its extensions with `$(LDFLAGS)`, but
+    mrgingham's Makefile (v1.29, line 118) doesn't, so its extension would
+    need an upstream one-liner.
 - **OpenCV.** Homebrew's `opencv` is 5.0 (`opencv5.pc`, headers under
   `include/opencv5`). Upstream's `09b2055` supports it: it tries `opencv4`
   first, then `opencv5`, and includes `opencv2/features/features.hpp` on 5
