@@ -9,6 +9,14 @@ class Vnlog < Formula
   sha256 "ec9ab6f21b900beaae0e7e40892d587ac900d3cb36cf3ac1b175dbe9a2c10b7f"
   license "LGPL-2.1-or-later"
 
+  bottle do
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/vnlog-1.45"
+    sha256 cellar: :any, arm64_tahoe:   "3f72227e15ee0cde30cfe632ccffa5c73a9563a54474520d1d16866b46a37854"
+    sha256 cellar: :any, arm64_sequoia: "725c66c0672d3431d8259fffd1a4dce28189897eb7625f38f497086cd0ed2d70"
+    sha256 cellar: :any, arm64_linux:   "758ede7bd0abf2a6877828336a9d44892af77363202db025c1a5f6692ad48cfb"
+    sha256 cellar: :any, x86_64_linux:  "93203195a59a97cf3308f86d03b5035ccdf6844d5c46b875aa7682c714fa0ee4"
+  end
+
   depends_on "harryweppner/calibration/mrbuild" => :build
   depends_on "mawk"
   depends_on "moreutils"
