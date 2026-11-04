@@ -15,6 +15,14 @@ class Mrcal < Formula
     regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
+  bottle do
+    root_url "https://github.com/HarryWeppner/homebrew-calibration/releases/download/mrcal-2.5.3"
+    sha256 cellar: :any, arm64_tahoe:   "a84e076ccd77f37bef2a43edb974ab7a61ad9d3dd82b920b013b42bd6d512bdd"
+    sha256 cellar: :any, arm64_sequoia: "9973530827db53bfcf21e520cacc5698263048faaa08f5e45b265e1601fb6981"
+    sha256 cellar: :any, arm64_linux:   "8dc664148520c14fb588cabc7e3cc9ddecfdc92666189d9453b7901c7b591a66"
+    sha256 cellar: :any, x86_64_linux:  "c96fb65f7ee43c664d85b4ba3c01f3c7354159be85c7dc3c3e665fdd19c6b209"
+  end
+
   depends_on "cython" => :build
   depends_on "harryweppner/calibration/mrbuild" => :build
   depends_on "meson" => :build
